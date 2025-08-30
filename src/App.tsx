@@ -7,9 +7,18 @@ import { GameOverDialog } from "./components/GameOverDialog";
 import { useGameLogic } from "./hooks/useGameLogic";
 import "./colors.css";
 
+// Import test helpers for development (only in dev mode)
+if (import.meta.env.DEV) {
+  import("./test/manualTestHelper");
+  import("./test/gameOverBugTest").then((module) => {
+    (window as any).testGameOverBug = module.testGameOverBugScenario;
+  });
+}
+
 function App() {
   const theme = getLightTheme();
 
+  const gameLogic = useGameLogic();
   const {
     board,
     imageBoard,
@@ -19,10 +28,24 @@ function App() {
     ghostPosition,
     isGameOver,
     draggedPiece,
+    animationState,
     handleNewGame,
     onPieceDragStart,
     onPieceDragEnd,
-  } = useGameLogic();
+  } = gameLogic;
+
+  // Expose game state for testing in development mode
+  if (import.meta.env.DEV) {
+    (window as any).gameStateSetters = {
+      setBoard: (gameLogic as any).setBoard,
+      setImageBoard: (gameLogic as any).setImageBoard,
+      setBag: (gameLogic as any).setBag,
+      setScore: (gameLogic as any).setScore,
+      setIsGameOver: (gameLogic as any).setIsGameOver,
+    };
+    (window as any).gameEngineRef = (gameLogic as any).gameEngineRef;
+    (window as any).bagManagerRef = (gameLogic as any).bagManagerRef;
+  }
 
   return (
     <ThemeProvider theme={theme}>
@@ -74,6 +97,7 @@ function App() {
               board={board}
               imageBoard={imageBoard}
               ghostPosition={ghostPosition}
+              animationState={animationState}
             />
           </Box>
         </Container>
