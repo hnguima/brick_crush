@@ -8,6 +8,7 @@ export const useGameLogic = () => {
   const gameState = useGameState();
   const {
     board,
+    imageBoard,
     bag,
     score,
     bestScore,
@@ -86,6 +87,7 @@ export const useGameLogic = () => {
   return {
     // Game state
     board,
+    imageBoard,
     bag,
     score,
     bestScore,

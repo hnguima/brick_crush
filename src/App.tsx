@@ -12,6 +12,7 @@ function App() {
 
   const {
     board,
+    imageBoard,
     bag,
     score,
     bestScore,
@@ -69,7 +70,11 @@ function App() {
               justifyContent: "center", // Center the board within the box
             }}
           >
-            <Board board={board} ghostPosition={ghostPosition} />
+            <Board
+              board={board}
+              imageBoard={imageBoard}
+              ghostPosition={ghostPosition}
+            />
           </Box>
         </Container>
 

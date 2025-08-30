@@ -7,6 +7,7 @@ import { soundEngine, SoundEffect } from "../game/SoundEngine";
 
 export interface GameState {
   board: Board;
+  imageBoard: (string | null)[][];
   bag: Bag;
   score: number;
   bestScore: number;
@@ -24,13 +25,16 @@ export const useGameState = () => {
   const gameEngineRef = useRef<GameEngine | null>(null);
   const bagManagerRef = useRef<BagManager | null>(null);
   const lastGhostPositionRef = useRef<string | null>(null);
-  
+
   // Initialize refs only once
   gameEngineRef.current ??= new GameEngine();
   bagManagerRef.current ??= new BagManager();
 
   // Game state
   const [board, setBoard] = useState(() => gameEngineRef.current!.getBoard());
+  const [imageBoard, setImageBoard] = useState(() =>
+    gameEngineRef.current!.getImageBoard()
+  );
   const [bag, setBag] = useState(() => bagManagerRef.current!.getBag());
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
@@ -73,6 +77,7 @@ export const useGameState = () => {
 
     // Reset all state
     setBoard(gameEngineRef.current!.getBoard());
+    setImageBoard(gameEngineRef.current!.getImageBoard());
     setBag(bagManagerRef.current.getBag());
     setDraggedPiece(null);
     setGhostPosition(null);
@@ -95,6 +100,7 @@ export const useGameState = () => {
 
         // Update board state from GameEngine
         setBoard(gameEngineRef.current!.getBoard());
+        setImageBoard(gameEngineRef.current!.getImageBoard());
         const newBag = bagManagerRef.current!.getBag();
         setBag(newBag);
 
@@ -117,6 +123,7 @@ export const useGameState = () => {
           }
 
           setBoard(gameEngineRef.current!.getBoard());
+          setImageBoard(gameEngineRef.current!.getImageBoard());
         }
 
         // Check if all pieces in bag are used (bag complete bonus)
@@ -200,6 +207,7 @@ export const useGameState = () => {
   return {
     // State
     board,
+    imageBoard,
     bag,
     score,
     bestScore,
