@@ -44,6 +44,8 @@ Success criteria
 - **Ghost Preview**: Real-time piece placement preview on board hover
 - **Board Interaction**: Drop detection and piece placement validation
 - **Sound Engine**: Native audio integration with Capacitor for low-latency sound effects
+- **Visual Feedback**: Tray pieces become opaque (0.3 opacity) when they cannot fit anywhere on the board
+- **Invalid Placement Feedback**: Dragged pieces become opaque when positioned over invalid locations
 
 ### Performance Optimizations ⚡
 
@@ -402,6 +404,8 @@ Accessibility
 
 Keep a concise log of plan-impacting changes. Newest first.
 
+- 2025-08-30: Enhanced responsive design for larger screens — significantly increased board size for tablets and desktop. Board now scales from 500px (mobile) to 950px+ (large screens) with proportionally larger tiles and gaps. Tablet screens (768px-1200px) get 45-95px tiles vs 28-65px on mobile, and desktop gets 55-110px tiles. Updated App.tsx container constraints to accommodate larger boards. Files: `src/ui/BoardRenderer.tsx`, `src/App.tsx`, `src/components/Tray.tsx`. Status: Much better iPad and desktop experience with appropriately sized game elements.
+- 2025-08-30: Visual feedback for invalid pieces — implemented tray piece opacity feedback where pieces become 30% opaque when they cannot fit anywhere on the current board state. This provides immediate visual cues to help players identify which pieces are placeable without having to test drag each one. Enhanced DraggablePiece component to accept `canFitOnBoard` prop and updated Tray component with board validation logic using GameEngine's placement rules. Files: `src/components/DraggablePiece.tsx`, `src/components/Tray.tsx`, `src/App.tsx`. Status: Clear visual feedback system for piece placement viability.
 - 2025-08-30: Critical line clearing bug fix — fixed issue where intersecting row/column clears would only clear one of them instead of both. The problem was that rows were cleared immediately after detection, which affected column detection for intersecting cells. Now all complete rows and columns are detected first, then cleared separately, ensuring both intersecting lines are properly cleared. Files: `src/game/GameEngine.ts`. Status: Line clearing now works correctly for all intersection cases.
 - 2025-08-30: UI layout improvements — centered board and tray vertically on screen by replacing CSS Grid with flexbox layout and adding flexible spacers. The tray is now positioned close to the board with minimal spacing while maintaining proper safe area support. Files: `src/App.tsx`. Status: Improved visual layout with better spacing.
 - 2025-08-30: Cross-platform sound engine fix — completely rewrote sound loading strategy to work on both web and Android. Removed complex dual-path configuration in favor of simple platform-detected asset path prefix: `/sounds/` for web, `public/sounds/` for Android. The system now uses a single sound configuration with relative filenames, dynamically prefixed based on platform detection. Uses `isUrl: false` for Android native bundled assets and `isUrl: true` for web URL-based loading. Files: `src/game/SoundEngine.ts`. Status: Cross-platform sound solution ready for testing.
