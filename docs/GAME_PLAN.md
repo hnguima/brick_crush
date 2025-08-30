@@ -87,7 +87,7 @@ MVP (playable) - 98% Complete
 
 Polish
 
-- Animations for place/clear.
+- ✅ Animations for place/clear - Sequential line clear animation with wave effect.
 - ✅ Sound effects and haptics - Native audio engine with Capacitor Community Native Audio plugin.
 - Undo last move, piece rotation toggle (optional rules).
 - Session save, best score, simple menus.
@@ -377,6 +377,7 @@ Edges
 - [ ] Multiple clears at once: correct rows/cols cleared and score adds once per line with combo bonus.
 - [ ] Full board with no fits: game over banner.
 - [ ] Refresh mid‑game: state restored.
+- [x] Game over with line clearing: With 2 pieces left, one opaque (can't fit), placing the other clears lines making space for opaque piece - game should continue, not end prematurely.
 
 Accessibility
 
@@ -412,6 +413,8 @@ Accessibility
 
 Keep a concise log of plan-impacting changes. Newest first.
 
+- 2025-08-30: Critical game over bug fix — fixed premature game over when line clearing would make space for remaining pieces. The bug occurred when: (1) only 2 pieces left in bag, (2) one piece appears opaque (can't fit current board), (3) placing the other piece clears lines making space for the opaque piece. Previously, game over check happened immediately before line clearing, causing false game over. Now game over check is deferred until after line clearing completes, ensuring pieces that become placeable after clearing are properly considered. Added comprehensive test scenario in `src/test/gameOverBugTest.ts` and manual testing helpers in `src/test/manualTestHelper.ts`. Enhanced useGameState hook with effect to re-evaluate game over condition whenever board/bag changes (not during animations). Files: `src/hooks/useGameState.ts`, `src/test/gameOverBugTest.ts`, `src/test/manualTestHelper.ts`, `src/App.tsx`. Status: Game over logic now correctly handles line clearing scenarios.
+- 2025-08-30: Sequential line clear animation implemented — added visually appealing wave-effect line clearing with sequential delays. Cells in clearing lines now animate from left-to-right (rows) or top-to-bottom (columns) with 50ms delays between each cell. Animation includes scale and fade effects with proper fill-mode to prevent visual glitches. Enhanced GameEngine with separated detection/clearing phases, updated animation state to include per-cell delays, and refined cell styling for transparent backgrounds with grey board container. Files: `src/game/GameEngine.ts`, `src/hooks/useGameState.ts`, `src/ui/BoardRenderer.tsx`, `src/components/BrickCell.tsx`. Status: Polished line clearing experience with smooth sequential animations.
 - 2025-08-30: Brick image system implemented — replaced generic colored cells with configurable brick images. Created BrickCell component supporting both image-based bricks (like brick_red.png) and fallback colored bricks. Updated board rendering to use reduced gaps (1px mobile, 2px tablet, 3px desktop) and removed borders for cleaner appearance. Updated draggable pieces to use same BrickCell component for visual consistency. Flexible brick type system allows easy addition of new brick colors/images. Files: `src/components/BrickCell.tsx`, `src/ui/BoardRenderer.tsx`, `src/components/DraggablePiece.tsx`. Status: Visual enhancement complete, game now uses brick images instead of generic colors.
 - 2025-01-01: Critical performance and compatibility fixes — resolved multiple critical issues discovered during testing: (1) Fixed piece weight system where MONO pieces generated despite 0.0 weight by replacing || with ?? nullish coalescing operator; (2) Eliminated severe performance regression where bag regeneration occurred on every drag movement by implementing lazy ref initialization in useGameState hook; (3) Restored Android touch dragging functionality with hardware acceleration (translateZ, willChange properties); (4) Implemented pixel-level drag granularity optimization with DRAG_GRANULARITY_PX constant; (5) Eliminated repeated emotion CSS object creation by replacing Material-UI Box/Paper with static div styling. All changes tested and committed with conventional commit messages. Files: `src/game/Bag.ts`, `src/hooks/useGameState.ts`, `src/components/DraggablePiece.tsx`. Status: All critical issues resolved, game performance restored.
 - 2025-08-30: Enhanced responsive design for larger screens — significantly increased board size for tablets and desktop. Board now scales from 500px (mobile) to 950px+ (large screens) with proportionally larger tiles and gaps. Tablet screens (768px-1200px) get 45-95px tiles vs 28-65px on mobile, and desktop gets 55-110px tiles. Updated App.tsx container constraints to accommodate larger boards. Files: `src/ui/BoardRenderer.tsx`, `src/App.tsx`, `src/components/Tray.tsx`. Status: Much better iPad and desktop experience with appropriately sized game elements.
