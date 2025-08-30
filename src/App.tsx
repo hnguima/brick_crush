@@ -17,6 +17,7 @@ function App() {
     bestScore,
     ghostPosition,
     isGameOver,
+    draggedPiece,
     handleNewGame,
     onPieceDragStart,
     onPieceDragEnd,
@@ -44,7 +45,7 @@ function App() {
         <Box sx={{ flex: 1 }} />
 
         <Container
-          maxWidth="sm"
+          maxWidth={false}
           sx={{
             display: "flex",
             justifyContent: "center",
@@ -56,7 +57,13 @@ function App() {
           <Box
             sx={{
               width: "100%",
-              maxWidth: "500px", // Max board width
+              maxWidth: {
+                xs: "500px", // Mobile - increased
+                sm: "600px", // Small tablets - increased  
+                md: "800px", // Medium tablets - increased
+                lg: "950px", // Large screens - increased
+                xl: "1000px", // Extra large screens - increased
+              },
               minWidth: "300px", // Min board width
               display: "flex",
               justifyContent: "center", // Center the board within the box
@@ -67,11 +74,16 @@ function App() {
         </Container>
 
         {/* Tray section - no spacer, directly after board */}
-        <Box sx={{ pt: 1 }}> {/* Small top padding between board and tray */}
+        <Box sx={{ pt: 1 }}>
+          {" "}
+          {/* Small top padding between board and tray */}
           <Tray
             bag={bag}
+            board={board}
             onPieceDragStart={onPieceDragStart}
             onPieceDragEnd={onPieceDragEnd}
+            ghostPosition={ghostPosition}
+            draggedPieceIndex={draggedPiece?.index ?? null}
           />
         </Box>
 

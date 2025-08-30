@@ -1,29 +1,79 @@
 import React from "react";
 import { Box, Paper, useTheme, useMediaQuery } from "@mui/material";
-import type { Piece, Bag } from "../game/Types";
+import type { Piece, Bag, Coord, Board } from "../game/Types";
 import { DraggablePiece } from "./DraggablePiece";
 import { getCurrentBoardMetrics } from "../ui/BoardRenderer";
 
 interface TrayProps {
   bag: Bag;
+  board: Board;
   onPieceDragStart: (piece: Piece, index: number) => void;
   onPieceDragEnd: () => void;
+  ghostPosition?: {
+    coords: Coord[];
+    valid: boolean;
+    wouldCompleteRows: number[];
+    wouldCompleteCols: number[];
+  } | null;
+  draggedPieceIndex?: number | null;
 }
 
 export const Tray: React.FC<TrayProps> = ({
   bag,
+  board,
   onPieceDragStart,
   onPieceDragEnd,
+  ghostPosition,
+  draggedPieceIndex,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Changed from "md" to "sm"
+  const isTablet = useMediaQuery(theme.breakpoints.between("md", "xl"));
+
+  // Function to check if a piece can fit anywhere on the board
+  const canPieceFitAnywhere = (piece: Piece): boolean => {
+    if (!piece) return false;
+    
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        // Check if piece can be placed at this position
+        let canPlace = true;
+        for (const cell of piece.cells) {
+          const boardX = x + cell.x;
+          const boardY = y + cell.y;
+          
+          // Check bounds and if cell is occupied
+          if (boardX < 0 || boardX >= 8 || boardY < 0 || boardY >= 8 || board[boardY][boardX] !== 0) {
+            canPlace = false;
+            break;
+          }
+        }
+        
+        if (canPlace) {
+          return true;
+        }
+      }
+    }
+    
+    return false;
+  };
 
   // Get actual board metrics to match width exactly
   const { tile, gap, padding } = getCurrentBoardMetrics();
   const boardWidth = 8 * tile + 7 * gap + 2 * padding;
 
+  // Responsive tray metrics
+  let trayHeight;
+  if (isMobile) {
+    trayHeight = 150;
+  } else if (isTablet) {
+    trayHeight = 180;
+  } else {
+    trayHeight = 200;
+  }
+
   const trayMetrics = {
-    height: isMobile ? 150 : 150, // Increased tray height
+    height: trayHeight,
     spacing: isMobile ? 40 : 60, // Much larger spacing between pieces
   };
 
@@ -39,7 +89,7 @@ export const Tray: React.FC<TrayProps> = ({
       <Paper
         elevation={1}
         sx={{
-          width: `calc(${boardWidth}px + 20px)`,
+          width: `calc(${boardWidth}px + 25px)`,
           height: `${trayMetrics.height}px`,
           position: "relative", // For absolute positioning of pieces
           borderRadius: 2,
@@ -67,6 +117,10 @@ export const Tray: React.FC<TrayProps> = ({
                   index={index}
                   onDragStart={onPieceDragStart}
                   onDragEnd={onPieceDragEnd}
+                  isValidPlacement={
+                    draggedPieceIndex === index ? ghostPosition?.valid : undefined
+                  }
+                  canFitOnBoard={canPieceFitAnywhere(piece)}
                 />
               ) : (
                 <Box

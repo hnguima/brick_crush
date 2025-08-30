@@ -10,6 +10,8 @@ interface DraggablePieceProps {
   index: number;
   onDragStart: (piece: Piece, index: number) => void;
   onDragEnd: () => void;
+  isValidPlacement?: boolean;
+  canFitOnBoard?: boolean;
 }
 
 const PieceRenderer: React.FC<{
@@ -17,9 +19,16 @@ const PieceRenderer: React.FC<{
   tileSize: number;
   gap: number;
   isDragging?: boolean;
-}> = ({ piece, tileSize, gap, isDragging = false }) => {
+  isValidPlacement?: boolean;
+}> = ({ piece, tileSize, gap, isDragging = false, isValidPlacement }) => {
   const pieceWidth = piece.size.w * tileSize + (piece.size.w - 1) * gap;
   const pieceHeight = piece.size.h * tileSize + (piece.size.h - 1) * gap;
+
+  // Determine opacity based on drag state and validity
+  let opacity = 1;
+  if (isDragging) {
+    opacity = isValidPlacement === false ? 0.3 : 1; // More opaque when invalid
+  }
 
   return (
     <Box
@@ -30,6 +39,8 @@ const PieceRenderer: React.FC<{
         backgroundColor: "transparent", // Transparent background
         display: "flex",
         pointerEvents: "none", // Prevent interference during drag
+        opacity: opacity,
+        transition: isDragging ? "opacity 0.1s ease" : "none", // Quick transition for responsiveness
       }}
     >
       {/* Render individual cells of the piece */}
@@ -60,21 +71,33 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
   index,
   onDragStart,
   onDragEnd,
+  isValidPlacement,
+  canFitOnBoard,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Changed from "md" to "sm"
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "lg")); // Added tablet detection
 
   const [isDragging, setIsDragging] = useState(false);
   const [dragPosition, setDragPosition] = useState({ x: 0, y: 0 });
   const lastHoverTime = useRef(0);
   const lastUpdateTime = useRef(0);
   const lastBoardPosition = useRef({ x: -1, y: -1 });
-  const HOVER_THROTTLE = 100; // Much more aggressive throttling - 5fps for hover
-  const UPDATE_THROTTLE = 10; // ~10fps for visual updates
+  const HOVER_THROTTLE = 20; // Much more aggressive throttling - 5fps for hover
+  const UPDATE_THROTTLE = 100; // ~10fps for visual updates
 
-  // Responsive sizing
-  const trayTileSize = isMobile ? 16 : 20; // Smaller tiles for tray display
-  const trayGap = isMobile ? 1 : 2;
+  // Responsive sizing for tray pieces
+  let trayTileSize, trayGap;
+  if (isMobile) {
+    trayTileSize = 16;
+    trayGap = 1;
+  } else if (isTablet) {
+    trayTileSize = 24;
+    trayGap = 2;
+  } else {
+    trayTileSize = 28;
+    trayGap = 3;
+  }
 
   // Use actual board metrics for accurate dragging size
   const boardMetrics = getCurrentBoardMetrics();
@@ -233,6 +256,14 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
     },
   });
 
+  // Calculate tray piece opacity
+  let trayOpacity = 1;
+  if (isDragging) {
+    trayOpacity = 0.5;
+  } else if (canFitOnBoard === false) {
+    trayOpacity = 0.3; // Make opaque if can't fit on board
+  }
+
   return (
     <>
       {/* Original piece in tray */}
@@ -241,7 +272,7 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
         {...dragProps}
         sx={{
           cursor: isDragging ? "grabbing" : "grab",
-          opacity: isDragging ? 0.5 : 1, // Less transparent during drag
+          opacity: trayOpacity,
           userSelect: "none",
           transition: "opacity 0.2s ease",
           padding: 2, // Add padding around pieces for bigger hitboxes
@@ -276,6 +307,7 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
               tileSize={dragTileSize}
               gap={dragGap}
               isDragging
+              isValidPlacement={isValidPlacement}
             />
           </Box>,
           document.body
