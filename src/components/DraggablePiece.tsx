@@ -100,17 +100,17 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
   const HOVER_THROTTLE = 15; // Much more aggressive throttling - 5fps for hover
   const UPDATE_THROTTLE = 15; // ~10fps for visual updates
 
-  // Responsive sizing for tray pieces
+  // Responsive sizing for tray pieces - reduced gaps to match board changes
   let trayTileSize, trayGap;
   if (isMobile) {
     trayTileSize = 16;
-    trayGap = 0.5; // Reduced gap
+    trayGap = 0.25; // Further reduced gap
   } else if (isTablet) {
     trayTileSize = 24;
-    trayGap = 1; // Reduced gap
+    trayGap = 0.5; // Further reduced gap
   } else {
     trayTileSize = 28;
-    trayGap = 1; // Reduced gap
+    trayGap = 0.5; // Further reduced gap
   }
 
   // Use actual board metrics for accurate dragging size
