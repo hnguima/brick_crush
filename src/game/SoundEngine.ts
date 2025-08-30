@@ -50,7 +50,14 @@ export class SoundEngine {
       loop: false,
     },
     [SoundEffect.LINE_CLEAR]: {
-      paths: ["line_clear_1.wav", "line_clear_2.wav"],
+      paths: [
+        "line_clear_1.wav",
+        "line_clear_2.wav",
+        "line_clear_3.m4a",
+        "line_clear_4.m4a",
+        "line_clear_5.m4a",
+        "line_clear_6.m4a",
+      ],
       volume: 0.8,
       loop: false,
     },
