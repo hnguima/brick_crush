@@ -1,9 +1,13 @@
 import React, { useState, useRef } from "react";
-import { Box, Paper, useTheme, useMediaQuery } from "@mui/material";
+import { useTheme, useMediaQuery } from "@mui/material";
 import { createPortal } from "react-dom";
 import type { Piece } from "../game/Types";
 import { useDragDrop } from "../hooks/useDragDrop";
 import { getCurrentBoardMetrics } from "../ui/BoardRenderer";
+
+// INTERNAL: Drag granularity in pixels - minimum movement required to trigger updates
+// Using 2px for better Android touch handling (was 1px)
+const DRAG_GRANULARITY_PX = 2;
 
 interface DraggablePieceProps {
   piece: Piece;
@@ -30,39 +34,45 @@ const PieceRenderer: React.FC<{
     opacity = isValidPlacement === false ? 0.3 : 1; // More opaque when invalid
   }
 
+  // Optimized styles as plain CSS objects to avoid repeated emotion objects
+  const containerStyle = {
+    width: pieceWidth,
+    height: pieceHeight,
+    position: "relative" as const,
+    backgroundColor: "transparent",
+    display: "flex" as const,
+    pointerEvents: "none" as const,
+    opacity: opacity,
+    transition: isDragging ? "opacity 0.1s ease" : "none",
+  };
+
+  const cellBaseStyle = {
+    position: "absolute" as const,
+    width: tileSize,
+    height: tileSize,
+    backgroundColor: piece.color || "#6750A4", // Use theme primary color
+    border: "1px solid #CBD5E1", // Divider color
+    borderRadius: "4px", // Material UI border radius level 1
+    boxShadow: isDragging
+      ? "0 4px 8px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08)" // elevation 4
+      : "0 2px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)", // elevation 2
+    transition: isDragging ? "none" : "box-shadow 0.2s ease",
+  };
+
   return (
-    <Box
-      sx={{
-        width: pieceWidth,
-        height: pieceHeight,
-        position: "relative",
-        backgroundColor: "transparent", // Transparent background
-        display: "flex",
-        pointerEvents: "none", // Prevent interference during drag
-        opacity: opacity,
-        transition: isDragging ? "opacity 0.1s ease" : "none", // Quick transition for responsiveness
-      }}
-    >
-      {/* Render individual cells of the piece */}
+    <div style={containerStyle}>
+      {/* Render individual cells of the piece as divs */}
       {piece.cells.map((cell) => (
-        <Paper
+        <div
           key={`${cell.x}-${cell.y}`}
-          elevation={isDragging ? 4 : 2}
-          sx={{
-            position: "absolute",
+          style={{
+            ...cellBaseStyle,
             left: cell.x * (tileSize + gap),
             top: cell.y * (tileSize + gap),
-            width: tileSize,
-            height: tileSize,
-            backgroundColor: piece.color || "primary.main",
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 1,
-            transition: isDragging ? "none" : "elevation 0.2s ease",
           }}
         />
       ))}
-    </Box>
+    </div>
   );
 };
 
@@ -83,8 +93,9 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
   const lastHoverTime = useRef(0);
   const lastUpdateTime = useRef(0);
   const lastBoardPosition = useRef({ x: -1, y: -1 });
-  const HOVER_THROTTLE = 20; // Much more aggressive throttling - 5fps for hover
-  const UPDATE_THROTTLE = 100; // ~10fps for visual updates
+  const lastPixelPosition = useRef({ x: -1, y: -1 }); // Track pixel-level position
+  const HOVER_THROTTLE = 15; // Much more aggressive throttling - 5fps for hover
+  const UPDATE_THROTTLE = 15; // ~10fps for visual updates
 
   // Responsive sizing for tray pieces
   let trayTileSize, trayGap;
@@ -108,86 +119,106 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
   const { dragRef, dragProps } = useDragDrop({
     onDragStart: (event: PointerEvent) => {
       setIsDragging(true);
-      setDragPosition({ x: event.clientX, y: event.clientY });
+      // Initialize drag position immediately to prevent jumping to (0,0)
+      const startPosition = { x: event.clientX, y: event.clientY };
+      setDragPosition(startPosition);
+      lastPixelPosition.current = {
+        x: Math.floor(startPosition.x / DRAG_GRANULARITY_PX),
+        y: Math.floor(startPosition.y / DRAG_GRANULARITY_PX),
+      };
       onDragStart(piece, index);
     },
     onDragMove: (event: PointerEvent) => {
       const now = Date.now();
 
-      // Throttle position updates to reduce re-renders
+      // Always update position for smooth dragging on all pointer types
       if (now - lastUpdateTime.current > UPDATE_THROTTLE) {
         lastUpdateTime.current = now;
         setDragPosition({ x: event.clientX, y: event.clientY });
       }
 
-      // Throttle hover events to reduce performance impact
-      if (now - lastHoverTime.current > HOVER_THROTTLE) {
-        lastHoverTime.current = now;
+      // Check if drag moved enough pixels to warrant board updates
+      const currentPixelX = Math.floor(event.clientX / DRAG_GRANULARITY_PX);
+      const currentPixelY = Math.floor(event.clientY / DRAG_GRANULARITY_PX);
 
-        // Find board cells directly under the piece centers
-        const boardElement = document.querySelector("[data-board-renderer]");
-        if (boardElement) {
-          // Calculate piece cell centers in screen coordinates
-          const pieceCellCenters = piece.cells.map((cell) => ({
-            x:
-              dragPosition.x +
-              (cell.x * dragTileSize + cell.x * dragGap) +
-              dragTileSize / 2 -
-              (piece.size.w * dragTileSize + (piece.size.w - 1) * dragGap) / 2,
-            y:
-              dragPosition.y +
-              (cell.y * dragTileSize + cell.y * dragGap) +
-              dragTileSize / 2 -
-              (piece.size.h * dragTileSize + (piece.size.h - 1) * dragGap) -
-              dragPadding,
-            cellCoord: cell,
-          }));
+      const pixelMoved =
+        currentPixelX !== lastPixelPosition.current.x ||
+        currentPixelY !== lastPixelPosition.current.y;
 
-          // Find which board cells are under each piece cell center
-          const targetCells: Array<{ row: number; col: number }> = [];
+      // Only update board hover events if we moved enough pixels
+      if (pixelMoved) {
+        lastPixelPosition.current = { x: currentPixelX, y: currentPixelY };
 
-          pieceCellCenters.forEach((pieceCenter) => {
-            // Use elementFromPoint to find the board cell under this piece center
-            const elementUnder = document.elementFromPoint(
-              pieceCenter.x,
-              pieceCenter.y
-            );
-            const cellElement = elementUnder?.closest(
-              "[data-cell]"
-            ) as HTMLElement;
+        // Throttle hover events to reduce performance impact
+        if (now - lastHoverTime.current > HOVER_THROTTLE) {
+          lastHoverTime.current = now;
 
-            if (cellElement) {
-              const cellData = cellElement.getAttribute("data-cell");
-              if (cellData) {
-                const [row, col] = cellData.split("-").map(Number);
-                if (!isNaN(row) && !isNaN(col)) {
-                  targetCells.push({ row, col });
+          // Find board cells directly under the piece centers
+          const boardElement = document.querySelector("[data-board-renderer]");
+          if (boardElement) {
+            // Calculate piece cell centers in screen coordinates
+            const pieceCellCenters = piece.cells.map((cell) => ({
+              x:
+                dragPosition.x +
+                (cell.x * dragTileSize + cell.x * dragGap) +
+                dragTileSize / 2 -
+                (piece.size.w * dragTileSize + (piece.size.w - 1) * dragGap) /
+                  2,
+              y:
+                dragPosition.y +
+                (cell.y * dragTileSize + cell.y * dragGap) +
+                dragTileSize / 2 -
+                (piece.size.h * dragTileSize + (piece.size.h - 1) * dragGap) -
+                dragPadding,
+              cellCoord: cell,
+            }));
+
+            // Find which board cells are under each piece cell center
+            const targetCells: Array<{ row: number; col: number }> = [];
+
+            pieceCellCenters.forEach((pieceCenter) => {
+              // Use elementFromPoint to find the board cell under this piece center
+              const elementUnder = document.elementFromPoint(
+                pieceCenter.x,
+                pieceCenter.y
+              );
+              const cellElement = elementUnder?.closest(
+                "[data-cell]"
+              ) as HTMLElement;
+
+              if (cellElement) {
+                const cellData = cellElement.getAttribute("data-cell");
+                if (cellData) {
+                  const [row, col] = cellData.split("-").map(Number);
+                  if (!isNaN(row) && !isNaN(col)) {
+                    targetCells.push({ row, col });
+                  }
                 }
               }
-            }
-          });
-
-          // Only trigger if target cells changed
-          const newTargetKey = targetCells
-            .map((c) => `${c.row},${c.col}`)
-            .sort((a, b) => a.localeCompare(b))
-            .join("|");
-          const currentTargetKey = `${lastBoardPosition.current.x},${lastBoardPosition.current.y}`;
-
-          if (newTargetKey !== currentTargetKey) {
-            lastBoardPosition.current = {
-              x: targetCells.length,
-              y: Date.now(),
-            }; // Use length + timestamp as change indicator
-
-            // Trigger board hover with target cells
-            const hoverEvent = new CustomEvent("pieceHover", {
-              detail: {
-                targetCells: targetCells,
-                piece: piece,
-              },
             });
-            window.dispatchEvent(hoverEvent);
+
+            // Only trigger if target cells changed
+            const newTargetKey = targetCells
+              .map((c) => `${c.row},${c.col}`)
+              .sort((a, b) => a.localeCompare(b))
+              .join("|");
+            const currentTargetKey = `${lastBoardPosition.current.x},${lastBoardPosition.current.y}`;
+
+            if (newTargetKey !== currentTargetKey) {
+              lastBoardPosition.current = {
+                x: targetCells.length,
+                y: Date.now(),
+              }; // Use length + timestamp as change indicator
+
+              // Trigger board hover with target cells
+              const hoverEvent = new CustomEvent("pieceHover", {
+                detail: {
+                  targetCells: targetCells,
+                  piece: piece,
+                },
+              });
+              window.dispatchEvent(hoverEvent);
+            }
           }
         }
       }
@@ -264,44 +295,47 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
     trayOpacity = 0.3; // Make opaque if can't fit on board
   }
 
+  // Optimized styles for tray piece container
+  const trayContainerStyle = {
+    cursor: isDragging ? "grabbing" : "grab",
+    opacity: trayOpacity,
+    userSelect: "none" as const,
+    transition: "opacity 0.2s ease",
+    padding: "16px", // Add padding around pieces for bigger hitboxes (equivalent to padding: 2)
+    margin: "-16px", // Negative margin to prevent layout shift (equivalent to margin: -2)
+    touchAction: "none", // Important: prevent default touch behaviors
+  };
+
+  // Optimized styles for dragging overlay
+  const dragOverlayStyle = {
+    position: "fixed" as const,
+    left: Math.round(
+      dragPosition.x -
+        (piece.size.w * dragTileSize + (piece.size.w - 1) * dragGap) / 2
+    ),
+    top: Math.round(
+      dragPosition.y -
+        (piece.size.h * dragTileSize + (piece.size.h - 1) * dragGap) -
+        dragPadding
+    ),
+    pointerEvents: "none" as const,
+    zIndex: 9999,
+    // Ensure visibility on Android with explicit transform for hardware acceleration
+    transform: "translateZ(0)",
+    willChange: "transform",
+  };
+
   return (
     <>
       {/* Original piece in tray */}
-      <Box
-        ref={dragRef}
-        {...dragProps}
-        sx={{
-          cursor: isDragging ? "grabbing" : "grab",
-          opacity: trayOpacity,
-          userSelect: "none",
-          transition: "opacity 0.2s ease",
-          padding: 2, // Add padding around pieces for bigger hitboxes
-          margin: -2, // Negative margin to prevent layout shift
-        }}
-      >
+      <div ref={dragRef as any} {...dragProps} style={trayContainerStyle}>
         <PieceRenderer piece={piece} tileSize={trayTileSize} gap={trayGap} />
-      </Box>
+      </div>
 
       {/* Dragging overlay - rendered at document level */}
       {isDragging &&
         createPortal(
-          <Box
-            sx={{
-              position: "fixed",
-              // Position piece above the touch point for better visibility
-              // Center horizontally but offset upward by full piece height + extra margin
-              left:
-                dragPosition.x -
-                (piece.size.w * dragTileSize + (piece.size.w - 1) * dragGap) /
-                  2,
-              top:
-                dragPosition.y -
-                (piece.size.h * dragTileSize + (piece.size.h - 1) * dragGap) -
-                dragPadding, // dragPadding above the touch point for better visibility
-              pointerEvents: "none",
-              zIndex: 9999,
-            }}
-          >
+          <div style={dragOverlayStyle}>
             <PieceRenderer
               piece={piece}
               tileSize={dragTileSize}
@@ -309,7 +343,7 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
               isDragging
               isValidPlacement={isValidPlacement}
             />
-          </Box>,
+          </div>,
           document.body
         )}
     </>
