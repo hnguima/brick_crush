@@ -1,0 +1,40 @@
+:root {
+  /* Light theme colors */
+  --color-primary-light: #6750a4;
+  --color-secondary-light: #03dac6;
+  --color-bg-light: #eceef3;
+  --color-bg-light-paper: #ffffff;
+  --color-header-bg-light: #6750a4;
+  --color-text-light: #0f172a;
+  --color-surface-light: #ffffff;
+  --color-outline-light: #cbd5e1;
+
+  /* Dark theme colors */
+  --color-primary-dark: #7c4dff;
+  --color-secondary-dark: #1de9b6;
+  --color-bg-dark: #0b1020;
+  --color-bg-dark-paper: #111827;
+  --color-header-bg-dark: #7c4dff;
+  --color-text-dark: #e5e7eb;
+  --color-surface-dark: #111827;
+  --color-outline-dark: #374151;
+
+  /* Game-specific colors */
+  --color-ghost-valid: rgba(99, 102, 241, 0.35);
+  --color-ghost-invalid: rgba(239, 68, 68, 0.35);
+  --color-piece-1: #6750a4;
+  --color-piece-2: #03dac6;
+  --color-piece-3: #ff6b6b;
+}
+
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0;
+  text-align: left;
+  overflow-x: hidden;
+}
+
+body {
+  overflow-x: hidden;
+}
