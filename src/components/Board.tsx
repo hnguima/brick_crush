@@ -6,6 +6,7 @@ import type { Board as BoardType, Coord } from "../game/Types";
 
 interface BoardProps {
   board?: BoardType;
+  imageBoard?: (string | null)[][];
   ghostPosition?: {
     coords: Coord[];
     valid: boolean;
@@ -14,8 +15,12 @@ interface BoardProps {
   } | null;
 }
 
-export const Board: React.FC<BoardProps> = ({ board, ghostPosition }) => {
-  const [boardState] = useBoardState(board, ghostPosition);
+export const Board: React.FC<BoardProps> = ({
+  board,
+  imageBoard,
+  ghostPosition,
+}) => {
+  const [boardState] = useBoardState(board, imageBoard, ghostPosition);
 
   return (
     <Paper

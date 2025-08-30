@@ -4,6 +4,8 @@ import { createPortal } from "react-dom";
 import type { Piece } from "../game/Types";
 import { useDragDrop } from "../hooks/useDragDrop";
 import { getCurrentBoardMetrics } from "../ui/BoardRenderer";
+import { BrickCell } from "./BrickCell";
+import type { BoardCell } from "./BrickCell";
 
 // INTERNAL: Drag granularity in pixels - minimum movement required to trigger updates
 // Using 2px for better Android touch handling (was 1px)
@@ -46,32 +48,33 @@ const PieceRenderer: React.FC<{
     transition: isDragging ? "opacity 0.1s ease" : "none",
   };
 
-  const cellBaseStyle = {
-    position: "absolute" as const,
-    width: tileSize,
-    height: tileSize,
-    backgroundColor: piece.color || "#6750A4", // Use theme primary color
-    border: "1px solid #CBD5E1", // Divider color
-    borderRadius: "4px", // Material UI border radius level 1
-    boxShadow: isDragging
-      ? "0 4px 8px rgba(0,0,0,0.12), 0 2px 4px rgba(0,0,0,0.08)" // elevation 4
-      : "0 2px 4px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)", // elevation 2
-    transition: isDragging ? "none" : "box-shadow 0.2s ease",
-  };
-
   return (
     <div style={containerStyle}>
-      {/* Render individual cells of the piece as divs */}
-      {piece.cells.map((cell) => (
-        <div
-          key={`${cell.x}-${cell.y}`}
-          style={{
-            ...cellBaseStyle,
-            left: cell.x * (tileSize + gap),
-            top: cell.y * (tileSize + gap),
-          }}
-        />
-      ))}
+      {/* Render individual cells of the piece using BrickCell */}
+      {piece.cells.map((cell) => {
+        const boardCell: BoardCell = {
+          occupied: true,
+          image: piece.image || "/images/brick_red.png", // Use the piece's assigned image
+        };
+
+        return (
+          <div
+            key={`${cell.x}-${cell.y}`}
+            style={{
+              position: "absolute",
+              left: cell.x * (tileSize + gap),
+              top: cell.y * (tileSize + gap),
+            }}
+          >
+            <BrickCell
+              cell={boardCell}
+              tileSize={tileSize}
+              row={cell.y}
+              col={cell.x}
+            />
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -101,13 +104,13 @@ export const DraggablePiece: React.FC<DraggablePieceProps> = ({
   let trayTileSize, trayGap;
   if (isMobile) {
     trayTileSize = 16;
-    trayGap = 1;
+    trayGap = 0.5; // Reduced gap
   } else if (isTablet) {
     trayTileSize = 24;
-    trayGap = 2;
+    trayGap = 1; // Reduced gap
   } else {
     trayTileSize = 28;
-    trayGap = 3;
+    trayGap = 1; // Reduced gap
   }
 
   // Use actual board metrics for accurate dragging size
