@@ -91,6 +91,7 @@ export const useGameLogic = () => {
     bestScore,
     ghostPosition,
     isGameOver,
+    draggedPiece,
 
     // Game actions
     handleNewGame,
