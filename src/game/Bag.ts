@@ -14,6 +14,10 @@ export function generateBag(rng: SeededRandom): Bag {
   // First pass: try to get 3 different pieces with size constraints
   for (let i = 0; i < 3; i++) {
     const availablePieces = PIECE_LIBRARY.filter((piece) => {
+      // Skip pieces with 0 weight - be explicit about the check
+      const weight = PIECE_WEIGHTS[piece.id];
+      if (weight === undefined || weight === 0 || weight === 0.0) return false;
+
       // Skip if already used (prefer variety)
       if (usedIds.has(piece.id)) return false;
 
@@ -42,8 +46,12 @@ export function generateBag(rng: SeededRandom): Bag {
     });
 
     if (availablePieces.length === 0) {
-      // Fallback: allow any piece if no valid options
-      const piece = weightedRandomPiece(rng, PIECE_LIBRARY);
+      // Fallback: allow any piece with weight > 0 if no valid options
+      const fallbackPieces = PIECE_LIBRARY.filter(piece => {
+        const weight = PIECE_WEIGHTS[piece.id] ?? 1.0;
+        return weight > 0;
+      });
+      const piece = weightedRandomPiece(rng, fallbackPieces.length > 0 ? fallbackPieces : PIECE_LIBRARY);
       pieces.push(clonePieceWithRandomRotation(piece, rng));
     } else {
       const piece = weightedRandomPiece(rng, availablePieces);
@@ -54,7 +62,11 @@ export function generateBag(rng: SeededRandom): Bag {
 
   // Ensure we have exactly 3 pieces
   while (pieces.length < 3) {
-    const piece = weightedRandomPiece(rng, PIECE_LIBRARY);
+    const validPieces = PIECE_LIBRARY.filter(piece => {
+      const weight = PIECE_WEIGHTS[piece.id] ?? 1.0;
+      return weight > 0;
+    });
+    const piece = weightedRandomPiece(rng, validPieces);
     pieces.push(clonePieceWithRandomRotation(piece, rng));
   }
 
@@ -65,22 +77,34 @@ export function generateBag(rng: SeededRandom): Bag {
  * Select a piece using weighted random selection
  */
 function weightedRandomPiece(rng: SeededRandom, pieces: Piece[]): Piece {
-  const totalWeight = pieces.reduce(
-    (sum, piece) => sum + (PIECE_WEIGHTS[piece.id] || 1.0),
+  // Filter out pieces with 0 weight first
+  const validPieces = pieces.filter(piece => {
+    const weight = PIECE_WEIGHTS[piece.id] ?? 1.0;
+    return weight > 0;
+  });
+
+  // NEVER fallback to original pieces that might include 0-weight pieces
+  if (validPieces.length === 0) {
+    throw new Error('No valid pieces available for generation');
+  }
+
+  const totalWeight = validPieces.reduce(
+    (sum, piece) => sum + (PIECE_WEIGHTS[piece.id] ?? 1.0),
     0
   );
+  
   let randomValue = rng.next() * totalWeight;
 
-  for (const piece of pieces) {
-    const weight = PIECE_WEIGHTS[piece.id] || 1.0;
+  for (const piece of validPieces) {
+    const weight = PIECE_WEIGHTS[piece.id] ?? 1.0;
     randomValue -= weight;
     if (randomValue <= 0) {
       return piece;
     }
   }
 
-  // Fallback: return the last piece
-  return pieces[pieces.length - 1];
+  // Fallback: return the last valid piece (never MONO since it's filtered out)
+  return validPieces[validPieces.length - 1];
 }
 
 /**
