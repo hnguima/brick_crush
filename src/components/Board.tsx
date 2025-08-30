@@ -3,6 +3,7 @@ import React from "react";
 import { Paper } from "@mui/material";
 import { BoardRenderer, useBoardState } from "../ui/BoardRenderer";
 import type { Board as BoardType, Coord } from "../game/Types";
+import type { AnimationState } from "../hooks/useGameState";
 
 interface BoardProps {
   board?: BoardType;
@@ -13,14 +14,21 @@ interface BoardProps {
     wouldCompleteRows: number[];
     wouldCompleteCols: number[];
   } | null;
+  animationState?: AnimationState;
 }
 
 export const Board: React.FC<BoardProps> = ({
   board,
   imageBoard,
   ghostPosition,
+  animationState,
 }) => {
-  const [boardState] = useBoardState(board, imageBoard, ghostPosition);
+  const [boardState] = useBoardState(
+    board,
+    imageBoard,
+    ghostPosition,
+    animationState
+  );
 
   return (
     <Paper

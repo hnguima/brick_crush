@@ -23,17 +23,17 @@ const getBoardMetrics = (
     maxBoardWidth = Math.min(width * 0.65, 900); // Increased from 0.6, 700
   }
 
-  // Account for padding and gaps
+  // Account for padding and gaps - reduced gaps since cells no longer have borders
   let padding, gapSize;
   if (isMobile) {
     padding = 16;
-    gapSize = 2;
+    gapSize = 1; // Reduced from 2
   } else if (isTablet) {
     padding = 28;
-    gapSize = 4;
+    gapSize = 2; // Reduced from 4
   } else {
     padding = 32;
-    gapSize = 5;
+    gapSize = 3; // Reduced from 5
   }
   const availableWidth = maxBoardWidth - padding * 2;
   const totalGaps = 7 * gapSize; // 7 gaps between 8 tiles
@@ -94,6 +94,12 @@ export interface BoardState {
     wouldCompleteRows: number[];
     wouldCompleteCols: number[];
   };
+  animation?: {
+    clearingRows: number[];
+    clearingCols: number[];
+    isAnimating: boolean;
+    cellDelays?: Map<string, number>;
+  };
 }
 
 interface BoardRendererProps {
@@ -131,7 +137,7 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
 
   const boardMetrics = getBoardMetrics(containerWidth, isMobile, isTablet);
   const { tile, gap, padding } = boardMetrics;
-  const { cells, ghost } = boardState;
+  const { cells, ghost, animation } = boardState;
 
   const isGhostCell = (row: number, col: number): boolean => {
     return (
@@ -151,12 +157,29 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
     return isInCompletingRow || isInCompletingCol;
   };
 
+  const isClearingCell = (row: number, col: number): boolean => {
+    if (!animation?.isAnimating) return false;
+
+    // Check if this cell is in a row or column being cleared
+    const isInClearingRow = animation.clearingRows?.includes(row) || false;
+    const isInClearingCol = animation.clearingCols?.includes(col) || false;
+
+    return isInClearingRow || isInClearingCol;
+  };
+
+  const getCellAnimationDelay = (row: number, col: number): number => {
+    if (!animation?.isAnimating || !animation?.cellDelays) return 0;
+
+    const cellKey = `${row}-${col}`;
+    return animation.cellDelays.get(cellKey) || 0;
+  };
+
   return (
     <Box
       ref={containerRef}
       sx={{
         display: "inline-block", // Use inline-block to contain the grid
-        padding: 0, // No extra padding
+        padding: `${padding}px`, // No extra padding
         margin: 0, // No extra margin
       }}
     >
@@ -167,8 +190,10 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
           gridTemplateColumns: `repeat(8, ${tile}px)`,
           gridTemplateRows: `repeat(8, ${tile}px)`,
           gap: `${gap}px`,
-          padding: `${padding}px`,
+          padding: 0,
           boxSizing: "border-box",
+          backgroundColor: "rgba(201, 197, 197, 0.2)", // Light grey tint for the board
+          borderRadius: 0.5, // Slightly rounded corners
         }}
       >
         {cells.map((row, rowIndex) =>
@@ -179,6 +204,8 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
               isGhost={isGhostCell(rowIndex, colIndex)}
               ghostValid={ghost?.valid}
               isCompletingLine={isCompletingLineCell(rowIndex, colIndex)}
+              isClearing={isClearingCell(rowIndex, colIndex)}
+              animationDelay={getCellAnimationDelay(rowIndex, colIndex)}
               onClick={() => onCellClick?.(rowIndex, colIndex)}
               onHover={() => onCellHover?.(colIndex, rowIndex)}
               onDrop={() => onCellDrop?.(colIndex, rowIndex)}
@@ -202,7 +229,13 @@ export const useBoardState = (
     valid: boolean;
     wouldCompleteRows: number[];
     wouldCompleteCols: number[];
-  } | null
+  } | null,
+  animationState?: {
+    clearingRows: number[];
+    clearingCols: number[];
+    isAnimating: boolean;
+    cellDelays?: Map<string, number>;
+  }
 ): [BoardState, React.Dispatch<React.SetStateAction<BoardState>>] => {
   const { cols, rows } = { cols: 8, rows: 8 }; // Fixed board dimensions
 
@@ -237,6 +270,7 @@ export const useBoardState = (
   const [boardState, setBoardState] = React.useState<BoardState>(() => ({
     cells: createBoardFromData(customBoard, imageBoard),
     ghost: ghostPosition || undefined,
+    animation: animationState || undefined,
   }));
 
   // Update board state when props change
@@ -244,8 +278,9 @@ export const useBoardState = (
     setBoardState({
       cells: createBoardFromData(customBoard, imageBoard),
       ghost: ghostPosition || undefined,
+      animation: animationState || undefined,
     });
-  }, [customBoard, imageBoard, ghostPosition]);
+  }, [customBoard, imageBoard, ghostPosition, animationState]);
 
   return [boardState, setBoardState];
 };

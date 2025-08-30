@@ -122,7 +122,8 @@ export class GameEngine {
     };
   }
 
-  clearLines(): {
+  // Check for complete lines but don't clear them yet
+  detectCompletedLines(): {
     clearedRows: number[];
     clearedCols: number[];
     score: number;
@@ -130,7 +131,6 @@ export class GameEngine {
     const clearedRows: number[] = [];
     const clearedCols: number[] = [];
 
-    // First, identify all complete rows and columns WITHOUT clearing them yet
     // Check rows
     for (let y = 0; y < 8; y++) {
       if (this.board[y].every((cell) => cell === 1)) {
@@ -145,7 +145,16 @@ export class GameEngine {
       }
     }
 
-    // Now clear all identified complete rows
+    // Calculate score
+    const linesCleared = clearedRows.length + clearedCols.length;
+    const score = linesCleared * 100;
+
+    return { clearedRows, clearedCols, score };
+  }
+
+  // Actually clear the specified lines (called after animation)
+  clearSpecificLines(clearedRows: number[], clearedCols: number[]): void {
+    // Clear all identified complete rows
     for (const y of clearedRows) {
       for (let x = 0; x < 8; x++) {
         this.board[y][x] = 0;
@@ -153,19 +162,24 @@ export class GameEngine {
       }
     }
 
-    // Now clear all identified complete columns
+    // Clear all identified complete columns
     for (const x of clearedCols) {
       for (let y = 0; y < 8; y++) {
         this.board[y][x] = 0;
         this.imageBoard[y][x] = null; // Clear image path
       }
     }
+  }
 
-    // Calculate score
-    const linesCleared = clearedRows.length + clearedCols.length;
-    const score = linesCleared * 100;
-
-    return { clearedRows, clearedCols, score };
+  // Legacy method for backward compatibility
+  clearLines(): {
+    clearedRows: number[];
+    clearedCols: number[];
+    score: number;
+  } {
+    const result = this.detectCompletedLines();
+    this.clearSpecificLines(result.clearedRows, result.clearedCols);
+    return result;
   }
 
   // Check what lines would be completed if piece was placed (for ghost preview)

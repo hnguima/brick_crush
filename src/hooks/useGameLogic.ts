@@ -15,6 +15,7 @@ export const useGameLogic = () => {
     draggedPiece,
     ghostPosition,
     isGameOver,
+    animationState,
     setDraggedPiece,
     setGhostPosition,
     handleNewGame,
@@ -94,11 +95,23 @@ export const useGameLogic = () => {
     ghostPosition,
     isGameOver,
     draggedPiece,
+    animationState,
 
     // Game actions
     handleNewGame,
 
     // Drag and drop handlers
     ...dragDropHandlers,
+
+    // Pass through internal state for testing (dev only)
+    ...(import.meta.env.DEV && {
+      gameEngineRef: (gameState as any).gameEngineRef,
+      bagManagerRef: (gameState as any).bagManagerRef,
+      setBoard: (gameState as any).setBoard,
+      setImageBoard: (gameState as any).setImageBoard,
+      setBag: (gameState as any).setBag,
+      setScore: (gameState as any).setScore,
+      setIsGameOver: (gameState as any).setIsGameOver,
+    }),
   };
 };

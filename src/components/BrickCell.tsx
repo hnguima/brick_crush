@@ -12,6 +12,8 @@ interface BrickCellProps {
   isGhost?: boolean;
   ghostValid?: boolean;
   isCompletingLine?: boolean;
+  isClearing?: boolean;
+  animationDelay?: number; // Delay in milliseconds for sequential animation
   onClick?: () => void;
   onHover?: () => void;
   onDrop?: () => void;
@@ -25,6 +27,8 @@ export const BrickCell: React.FC<BrickCellProps> = ({
   isGhost,
   ghostValid,
   isCompletingLine,
+  isClearing,
+  animationDelay = 0,
   onClick,
   onHover,
   onDrop,
@@ -32,20 +36,29 @@ export const BrickCell: React.FC<BrickCellProps> = ({
   row,
   col,
 }) => {
-  let bgColor = "rgba(201, 197, 197, 0.3)";
-  if (isGhost) {
+  let bgColor = "transparent"; // Make all cells transparent by default
+  let borderColor = "transparent";
+  let borderWidth = 0;
+  let boxShadow = "none";
+
+  if (isClearing) {
+    // Clearing animation - pulse with bright color
+    bgColor = "rgba(255, 255, 255, 0.9)"; // Bright white for flash effect
+  } else if (isGhost) {
     // Use slightly darker background instead of border
     bgColor = ghostValid ? "rgba(76, 175, 80, 0.3)" : "rgba(244, 67, 54, 0.3)"; // Green or red with transparency
   } else if (isCompletingLine) {
-    // Highlight cells that would be part of completed lines
-    bgColor = "rgba(255, 193, 7, 0.4)"; // Orange/yellow highlight for line completion
-  } else if (cell.occupied) {
-    bgColor = "primary.main";
+    // Use a glowing border instead of background for line completion preview
+    borderColor = "#FFD700"; // Bright gold color
+    borderWidth = 2;
+    boxShadow =
+      "0 0 8px rgba(255, 215, 0, 0.8), inset 0 0 8px rgba(255, 215, 0, 0.3)"; // Outer and inner glow
   }
+  // Remove the occupied cell background color - keep all cells transparent
 
   return (
     <Paper
-      elevation={0}
+      elevation={0} // Remove elevation/shadow
       onClick={onClick}
       onMouseEnter={onHover}
       onDrop={(e) => {
@@ -63,10 +76,10 @@ export const BrickCell: React.FC<BrickCellProps> = ({
         minHeight: `${tileSize}px`,
         maxWidth: `${tileSize}px`, // Force maximum dimensions
         maxHeight: `${tileSize}px`,
-        borderRadius: 0.25, // Less rounded
+        borderRadius: 0.5, // Completely square, no rounded corners
         cursor: "default",
         bgcolor: bgColor,
-        opacity: 1, // Remove ghost opacity
+        opacity: 1,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -76,8 +89,30 @@ export const BrickCell: React.FC<BrickCellProps> = ({
         margin: 0, // No margin
         padding: 0, // No internal padding
         overflow: "hidden", // Ensure image doesn't overflow
-        border: "none", // Remove any default border
+        border: `${borderWidth}px solid ${borderColor}`, // Dynamic border for line completion
         outline: "none", // Remove focus outline
+        boxShadow: boxShadow, // Dynamic box shadow for line completion glow
+        // Clearing animation
+        ...(isClearing && {
+          animation: `line-clearing 0.6s ease-out ${animationDelay}ms forwards`,
+          "@keyframes line-clearing": {
+            "0%": {
+              transform: "scale(1)",
+              opacity: 1,
+              bgcolor: bgColor,
+            },
+            "50%": {
+              transform: "scale(1.1)",
+              opacity: 0.7,
+              bgcolor: "rgba(255, 255, 255, 0.9)",
+            },
+            "100%": {
+              transform: "scale(0)",
+              opacity: 0,
+              bgcolor: "transparent",
+            },
+          },
+        }),
       }}
     >
       {cell.occupied && (
@@ -89,10 +124,10 @@ export const BrickCell: React.FC<BrickCellProps> = ({
               src={cell.image}
               alt="Brick"
               sx={{
-                width: "90%",
-                height: "90%",
+                width: "100%", // Increased from 90% to fill the cell completely
+                height: "100%", // Increased from 90% to fill the cell completely
                 objectFit: "cover",
-                borderRadius: 0.25, // Less rounded
+                borderRadius: 0, // Remove rounded corners to match cell style
                 imageRendering: "pixelated", // For crisp pixel art if needed
               }}
             />

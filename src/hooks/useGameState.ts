@@ -5,6 +5,13 @@ import { BagManager } from "../game/BagManager";
 import { storage } from "../utils/storage";
 import { soundEngine, SoundEffect } from "../game/SoundEngine";
 
+export interface AnimationState {
+  clearingRows: number[];
+  clearingCols: number[];
+  isAnimating: boolean;
+  cellDelays?: Map<string, number>; // Map from "row-col" to delay in milliseconds
+}
+
 export interface GameState {
   board: Board;
   imageBoard: (string | null)[][];
@@ -18,6 +25,7 @@ export interface GameState {
     wouldCompleteRows: number[];
     wouldCompleteCols: number[];
   } | null;
+  animationState: AnimationState;
 }
 
 export const useGameState = () => {
@@ -49,6 +57,11 @@ export const useGameState = () => {
     wouldCompleteRows: number[];
     wouldCompleteCols: number[];
   } | null>(null);
+  const [animationState, setAnimationState] = useState<AnimationState>({
+    clearingRows: [],
+    clearingCols: [],
+    isAnimating: false,
+  });
 
   // Load best score on component mount
   useEffect(() => {
@@ -70,6 +83,14 @@ export const useGameState = () => {
     updateBest();
   }, [score, bestScore]);
 
+  // Re-evaluate game over condition whenever board or bag changes (but not during animations)
+  useEffect(() => {
+    if (!animationState.isAnimating) {
+      const isGameOverNow = gameEngineRef.current!.isGameOver(bag);
+      setIsGameOver(isGameOverNow);
+    }
+  }, [board, bag, animationState.isAnimating]);
+
   const handleNewGame = useCallback(() => {
     // Reset game engine and bag manager
     gameEngineRef.current!.reset();
@@ -83,11 +104,56 @@ export const useGameState = () => {
     setGhostPosition(null);
     setScore(0);
     setIsGameOver(false);
+    setAnimationState({
+      clearingRows: [],
+      clearingCols: [],
+      isAnimating: false,
+    });
     lastGhostPositionRef.current = null;
   }, []);
 
+  // Function to calculate sequential animation delays
+  const calculateCellDelays = useCallback(
+    (clearingRows: number[], clearingCols: number[]) => {
+      const cellDelays = new Map<string, number>();
+      const baseDelay = 50; // 50ms between each cell
+
+      // Process rows (animate from left to right)
+      clearingRows.forEach((row) => {
+        for (let col = 0; col < 8; col++) {
+          const cellKey = `${row}-${col}`;
+          const delay = col * baseDelay;
+          cellDelays.set(cellKey, delay);
+        }
+      });
+
+      // Process columns (animate from top to bottom)
+      clearingCols.forEach((col) => {
+        for (let row = 0; row < 8; row++) {
+          const cellKey = `${row}-${col}`;
+          const delay = row * baseDelay;
+          // If cell is already in a clearing row, use the maximum delay
+          const existingDelay = cellDelays.get(cellKey);
+          if (existingDelay !== undefined) {
+            cellDelays.set(cellKey, Math.max(existingDelay, delay));
+          } else {
+            cellDelays.set(cellKey, delay);
+          }
+        }
+      });
+
+      return cellDelays;
+    },
+    []
+  );
+
   const placePiece = useCallback(
     (piece: Piece, boardX: number, boardY: number) => {
+      // Don't allow piece placement during animations
+      if (animationState.isAnimating) {
+        return false;
+      }
+
       // Use GameEngine's placePiece method to ensure internal state is updated
       const placed = gameEngineRef.current!.placePiece(piece, boardX, boardY);
 
@@ -104,26 +170,71 @@ export const useGameState = () => {
         const newBag = bagManagerRef.current!.getBag();
         setBag(newBag);
 
-        // Clear lines and update score
-        const clearResult = gameEngineRef.current!.clearLines();
+        // Check for lines to clear, but don't clear them yet
+        const clearResult = gameEngineRef.current!.detectCompletedLines();
         if (
           clearResult.clearedRows.length > 0 ||
           clearResult.clearedCols.length > 0
         ) {
+          // Calculate sequential animation delays
+          const cellDelays = calculateCellDelays(
+            clearResult.clearedRows,
+            clearResult.clearedCols
+          );
+
+          // Start line clearing animation with sequential delays
+          setAnimationState({
+            clearingRows: clearResult.clearedRows,
+            clearingCols: clearResult.clearedCols,
+            isAnimating: true,
+            cellDelays: cellDelays,
+          });
+
           // Play line clear sound for successful clears
           soundEngine.play(SoundEffect.LINE_CLEAR);
 
-          const newScore = score + clearResult.score;
-          setScore(newScore);
+          // Calculate maximum animation duration (longest delay + animation duration)
+          const maxDelay = Math.max(...Array.from(cellDelays.values()));
+          const animationDuration = 600; // 0.6s animation duration
+          const totalDuration = maxDelay + animationDuration;
 
-          // Update best score if needed
-          if (newScore > bestScore) {
-            setBestScore(newScore);
-            storage.setBestScore(newScore);
-          }
+          // After total animation duration, actually clear the lines
+          setTimeout(() => {
+            gameEngineRef.current!.clearSpecificLines(
+              clearResult.clearedRows,
+              clearResult.clearedCols
+            );
 
-          setBoard(gameEngineRef.current!.getBoard());
-          setImageBoard(gameEngineRef.current!.getImageBoard());
+            // Update score
+            const newScore = score + clearResult.score;
+            setScore(newScore);
+
+            // Update best score if needed
+            if (newScore > bestScore) {
+              setBestScore(newScore);
+              storage.setBestScore(newScore);
+            }
+
+            // Update board state after clearing
+            setBoard(gameEngineRef.current!.getBoard());
+            setImageBoard(gameEngineRef.current!.getImageBoard());
+
+            // End animation
+            setAnimationState({
+              clearingRows: [],
+              clearingCols: [],
+              isAnimating: false,
+              cellDelays: new Map(),
+            });
+
+            // Check for game over condition AFTER line clearing is complete
+            // This ensures pieces that become placeable after clearing are considered
+            const isGameOverNow = gameEngineRef.current!.isGameOver(newBag);
+            if (isGameOverNow) {
+              soundEngine.play(SoundEffect.GAME_OVER);
+            }
+            setIsGameOver(isGameOverNow);
+          }, totalDuration); // Use calculated total duration
         }
 
         // Check if all pieces in bag are used (bag complete bonus)
@@ -132,19 +243,25 @@ export const useGameState = () => {
           soundEngine.play(SoundEffect.BAG_COMPLETE);
         }
 
-        // Check for game over condition
-        const isGameOverNow = gameEngineRef.current!.isGameOver(newBag);
-        if (isGameOverNow) {
-          soundEngine.play(SoundEffect.GAME_OVER);
+        // Only check for game over if no lines will be cleared
+        // If lines will be cleared, delay the check until after clearing completes
+        if (
+          clearResult.clearedRows.length === 0 &&
+          clearResult.clearedCols.length === 0
+        ) {
+          const isGameOverNow = gameEngineRef.current!.isGameOver(newBag);
+          if (isGameOverNow) {
+            soundEngine.play(SoundEffect.GAME_OVER);
+          }
+          setIsGameOver(isGameOverNow);
         }
-        setIsGameOver(isGameOverNow);
 
         return true;
       }
 
       return false;
     },
-    [draggedPiece, score, bestScore]
+    [draggedPiece, score, bestScore, animationState.isAnimating]
   );
 
   const updateGhostPosition = useCallback(
@@ -214,6 +331,7 @@ export const useGameState = () => {
     draggedPiece,
     ghostPosition,
     isGameOver,
+    animationState,
 
     // Actions
     setDraggedPiece,
@@ -221,5 +339,16 @@ export const useGameState = () => {
     handleNewGame,
     placePiece,
     updateGhostPosition,
+
+    // Internal refs and setters for testing (dev only)
+    ...(import.meta.env.DEV && {
+      gameEngineRef,
+      bagManagerRef,
+      setBoard,
+      setImageBoard,
+      setBag,
+      setScore,
+      setIsGameOver,
+    }),
   };
 };
