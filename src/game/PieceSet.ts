@@ -3,13 +3,33 @@ import type { Piece } from "./Types";
 /**
  * Standard piece set for the game - curated Tetris-like polyominoes
  * Each piece is defined by its relative coordinates from origin (0,0)
+ * Images are assigned based on piece size for consistent theming
  */
+
+// Helper function to assign image based on piece size (cell count)
+function getImageForPieceSize(cellCount: number): string {
+  switch (cellCount) {
+    case 1:
+      return "/images/brick_red.png"; // Monomino - red
+    case 2:
+      return "/images/brick_blue.png"; // Domino - blue
+    case 3:
+      return "/images/brick_green.png"; // Tromino - green
+    case 4:
+      return "/images/brick_yellow.png"; // Tetromino - yellow
+    case 5:
+      return "/images/brick_purple.png"; // Pentomino - purple
+    default:
+      return "/images/brick_red.png"; // Fallback - red
+  }
+}
 
 // Monomino
 const MONO: Piece = {
   id: "MONO",
   cells: [{ x: 0, y: 0 }],
   size: { w: 1, h: 1 },
+  image: "/images/brick_red.png",
 };
 
 // Dominos
@@ -20,6 +40,7 @@ const DOMINO_H: Piece = {
     { x: 1, y: 0 },
   ],
   size: { w: 2, h: 1 },
+  image: "/images/brick_yellow.png",
 };
 
 const DOMINO_V: Piece = {
@@ -29,6 +50,7 @@ const DOMINO_V: Piece = {
     { x: 0, y: 1 },
   ],
   size: { w: 1, h: 2 },
+  image: "/images/brick_yellow.png",
 };
 
 // Trominoes
@@ -40,6 +62,7 @@ const TROMINO_I: Piece = {
     { x: 2, y: 0 },
   ],
   size: { w: 3, h: 1 },
+  image: getImageForPieceSize(3),
 };
 
 const TROMINO_L: Piece = {
@@ -50,6 +73,7 @@ const TROMINO_L: Piece = {
     { x: 1, y: 1 },
   ],
   size: { w: 2, h: 2 },
+  image: getImageForPieceSize(3),
 };
 
 // Tetrominoes
@@ -62,6 +86,7 @@ const TETROMINO_I: Piece = {
     { x: 3, y: 0 },
   ],
   size: { w: 4, h: 1 },
+  image: "/images/brick_red.png",
 };
 
 const TETROMINO_O: Piece = {
@@ -73,6 +98,7 @@ const TETROMINO_O: Piece = {
     { x: 1, y: 1 },
   ],
   size: { w: 2, h: 2 },
+  image: "/images/brick_red.png",
 };
 
 const TETROMINO_T: Piece = {
@@ -84,6 +110,7 @@ const TETROMINO_T: Piece = {
     { x: 2, y: 1 },
   ],
   size: { w: 3, h: 2 },
+  image: "/images/brick_red.png",
 };
 
 const TETROMINO_L: Piece = {
@@ -95,6 +122,7 @@ const TETROMINO_L: Piece = {
     { x: 1, y: 2 },
   ],
   size: { w: 2, h: 3 },
+  image: "/images/brick_blue.png",
 };
 
 const TETROMINO_J: Piece = {
@@ -106,6 +134,7 @@ const TETROMINO_J: Piece = {
     { x: 0, y: 2 },
   ],
   size: { w: 2, h: 3 },
+  image: getImageForPieceSize(4),
 };
 
 const TETROMINO_S: Piece = {
@@ -117,6 +146,7 @@ const TETROMINO_S: Piece = {
     { x: 1, y: 1 },
   ],
   size: { w: 3, h: 2 },
+  image: getImageForPieceSize(4),
 };
 
 const TETROMINO_Z: Piece = {
@@ -128,6 +158,7 @@ const TETROMINO_Z: Piece = {
     { x: 2, y: 1 },
   ],
   size: { w: 3, h: 2 },
+  image: "/images/brick_blue.png",
 };
 
 // Pentominoes
@@ -141,6 +172,7 @@ const PENTOMINO_I: Piece = {
     { x: 4, y: 0 },
   ],
   size: { w: 5, h: 1 },
+  image: getImageForPieceSize(5),
 };
 
 // Hexominoes
@@ -155,6 +187,7 @@ const HEXOMINO_3X2: Piece = {
     { x: 2, y: 1 },
   ],
   size: { w: 3, h: 2 },
+  image: "/images/brick_green.png",
 };
 
 // Large pieces
@@ -168,6 +201,7 @@ const BIG_L_3X3: Piece = {
     { x: 2, y: 2 },
   ],
   size: { w: 3, h: 3 },
+  image: getImageForPieceSize(1),
 };
 
 const BIG_BLOCK_3X3: Piece = {
@@ -184,6 +218,7 @@ const BIG_BLOCK_3X3: Piece = {
     { x: 2, y: 2 },
   ],
   size: { w: 3, h: 3 },
+  image: getImageForPieceSize(2),
 };
 
 // All available pieces
@@ -256,6 +291,8 @@ export function clonePiece(piece: Piece): Piece {
     id: piece.id,
     cells: piece.cells.map((cell) => ({ x: cell.x, y: cell.y })),
     size: { w: piece.size.w, h: piece.size.h },
+    color: piece.color,
+    image: piece.image, // Copy the image property
   };
 }
 

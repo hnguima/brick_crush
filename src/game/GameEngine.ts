@@ -3,9 +3,11 @@ import { getCurrentBoardMetrics } from "../ui/BoardRenderer";
 
 export class GameEngine {
   public board: Board;
+  private imageBoard: (string | null)[][]; // Track image paths for each cell
 
   constructor() {
     this.board = this.createEmptyBoard();
+    this.imageBoard = this.createEmptyImageBoard();
   }
 
   private createEmptyBoard(): Board {
@@ -14,8 +16,18 @@ export class GameEngine {
       .map(() => Array(8).fill(0));
   }
 
+  private createEmptyImageBoard(): (string | null)[][] {
+    return Array(8)
+      .fill(null)
+      .map(() => Array(8).fill(null));
+  }
+
   getBoard(): Board {
     return this.board.map((row) => [...row]);
+  }
+
+  getImageBoard(): (string | null)[][] {
+    return this.imageBoard.map((row) => [...row]);
   }
 
   canPlacePiece(piece: Piece, boardX: number, boardY: number): boolean {
@@ -50,6 +62,7 @@ export class GameEngine {
       const x = boardX + cell.x;
       const y = boardY + cell.y;
       this.board[y][x] = 1;
+      this.imageBoard[y][x] = piece.image || "/images/brick_red.png"; // Store the piece's image
     }
 
     return true;
@@ -136,6 +149,7 @@ export class GameEngine {
     for (const y of clearedRows) {
       for (let x = 0; x < 8; x++) {
         this.board[y][x] = 0;
+        this.imageBoard[y][x] = null; // Clear image path
       }
     }
 
@@ -143,6 +157,7 @@ export class GameEngine {
     for (const x of clearedCols) {
       for (let y = 0; y < 8; y++) {
         this.board[y][x] = 0;
+        this.imageBoard[y][x] = null; // Clear image path
       }
     }
 
@@ -196,6 +211,7 @@ export class GameEngine {
 
   reset(): void {
     this.board = this.createEmptyBoard();
+    this.imageBoard = this.createEmptyImageBoard();
   }
 
   // Check if any piece from the bag can fit anywhere on the board

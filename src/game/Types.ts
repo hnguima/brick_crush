@@ -16,6 +16,7 @@ export interface Piece {
   cells: Coord[];
   size: { w: number; h: number };
   color?: string;
+  image?: string; // Image path for the piece (e.g., "/images/brick_blue.png")
 }
 
 export type Bag = [Piece | null, Piece | null, Piece | null];

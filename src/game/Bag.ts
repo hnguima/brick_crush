@@ -47,11 +47,14 @@ export function generateBag(rng: SeededRandom): Bag {
 
     if (availablePieces.length === 0) {
       // Fallback: allow any piece with weight > 0 if no valid options
-      const fallbackPieces = PIECE_LIBRARY.filter(piece => {
+      const fallbackPieces = PIECE_LIBRARY.filter((piece) => {
         const weight = PIECE_WEIGHTS[piece.id] ?? 1.0;
         return weight > 0;
       });
-      const piece = weightedRandomPiece(rng, fallbackPieces.length > 0 ? fallbackPieces : PIECE_LIBRARY);
+      const piece = weightedRandomPiece(
+        rng,
+        fallbackPieces.length > 0 ? fallbackPieces : PIECE_LIBRARY
+      );
       pieces.push(clonePieceWithRandomRotation(piece, rng));
     } else {
       const piece = weightedRandomPiece(rng, availablePieces);
@@ -62,7 +65,7 @@ export function generateBag(rng: SeededRandom): Bag {
 
   // Ensure we have exactly 3 pieces
   while (pieces.length < 3) {
-    const validPieces = PIECE_LIBRARY.filter(piece => {
+    const validPieces = PIECE_LIBRARY.filter((piece) => {
       const weight = PIECE_WEIGHTS[piece.id] ?? 1.0;
       return weight > 0;
     });
@@ -78,21 +81,21 @@ export function generateBag(rng: SeededRandom): Bag {
  */
 function weightedRandomPiece(rng: SeededRandom, pieces: Piece[]): Piece {
   // Filter out pieces with 0 weight first
-  const validPieces = pieces.filter(piece => {
+  const validPieces = pieces.filter((piece) => {
     const weight = PIECE_WEIGHTS[piece.id] ?? 1.0;
     return weight > 0;
   });
 
   // NEVER fallback to original pieces that might include 0-weight pieces
   if (validPieces.length === 0) {
-    throw new Error('No valid pieces available for generation');
+    throw new Error("No valid pieces available for generation");
   }
 
   const totalWeight = validPieces.reduce(
     (sum, piece) => sum + (PIECE_WEIGHTS[piece.id] ?? 1.0),
     0
   );
-  
+
   let randomValue = rng.next() * totalWeight;
 
   for (const piece of validPieces) {
@@ -124,6 +127,7 @@ function clonePiece(piece: Piece): Piece {
     cells: piece.cells.map((cell) => ({ x: cell.x, y: cell.y })),
     size: { w: piece.size.w, h: piece.size.h },
     color: piece.color,
+    image: piece.image, // Copy the image property
   };
 }
 
