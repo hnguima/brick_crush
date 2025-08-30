@@ -3,24 +3,51 @@ import React from "react";
 import { Box, Paper, useTheme, useMediaQuery } from "@mui/material";
 
 // Responsive board metrics based on a base width (usually viewport width)
-const getBoardMetrics = (baseWidth: number, isMobile: boolean) => {
+const getBoardMetrics = (baseWidth: number, isMobile: boolean, isTablet: boolean) => {
   // Calculate tile size based on provided width (viewport or container)
   const width = Math.max(320, baseWidth || 400);
-  const maxBoardWidth = Math.min(width * 0.9, isMobile ? 450 : 500); // Increased mobile from 350 to 450
+  
+  // More generous sizing for different screen sizes
+  let maxBoardWidth;
+  if (isMobile) {
+    maxBoardWidth = Math.min(width * 0.9, 500); // Increased from 450
+  } else if (isTablet) {
+    maxBoardWidth = Math.min(width * 0.75, 750); // Increased from 0.7, 600
+  } else {
+    maxBoardWidth = Math.min(width * 0.65, 900); // Increased from 0.6, 700
+  }
 
   // Account for padding and gaps
-  const padding = isMobile ? 16 : 24;
-  const gapSize = isMobile ? 2 : 3;
+  let padding, gapSize;
+  if (isMobile) {
+    padding = 16;
+    gapSize = 2;
+  } else if (isTablet) {
+    padding = 28;
+    gapSize = 4;
+  } else {
+    padding = 32;
+    gapSize = 5;
+  }
   const availableWidth = maxBoardWidth - padding * 2;
   const totalGaps = 7 * gapSize; // 7 gaps between 8 tiles
 
   const calculatedTileSize = Math.floor((availableWidth - totalGaps) / 8);
 
-  // Clamp tile size to reasonable bounds
-  const tileSize = Math.max(
-    isMobile ? 28 : 35, // Back to original minimum sizes
-    Math.min(calculatedTileSize, isMobile ? 60 : 65) // Increased maximum size especially for mobile
-  );
+  // Clamp tile size to reasonable bounds with better scaling
+  let minTileSize, maxTileSize;
+  if (isMobile) {
+    minTileSize = 28;
+    maxTileSize = 65; // Increased from 60
+  } else if (isTablet) {
+    minTileSize = 45;
+    maxTileSize = 95; // Increased from 80 
+  } else {
+    minTileSize = 55;
+    maxTileSize = 110; // Increased from 90
+  }
+  
+  const tileSize = Math.max(minTileSize, Math.min(calculatedTileSize, maxTileSize));
 
   // Ensure perfect square: calculate the actual board dimensions
   const actualBoardWidth = 8 * tileSize + 7 * gapSize + 2 * padding;
@@ -39,10 +66,11 @@ const getBoardMetrics = (baseWidth: number, isMobile: boolean) => {
 
 // Export function to get current board metrics from DOM
 export const getCurrentBoardMetrics = () => {
-  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 600; // Changed from 768 to 600
+  const isTablet = typeof window !== "undefined" && window.innerWidth >= 600 && window.innerWidth < 1200; // Changed from 768 to 600
   const width = typeof window !== "undefined" ? window.innerWidth : 400;
   // Prefer viewport width for consistency between UI and game logic
-  const { tile, gap, padding } = getBoardMetrics(width, !!isMobile);
+  const { tile, gap, padding } = getBoardMetrics(width, !!isMobile, !!isTablet);
   return { tile, gap, padding };
 };
 
@@ -160,7 +188,8 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
   onCellDrop,
 }) => {
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm")); // Changed from "md" to "sm" (600px)
+  const isTablet = useMediaQuery(theme.breakpoints.between("sm", "lg")); // Changed from "md", "xl" to "sm", "lg"
   const containerRef = React.useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = React.useState<number>(() =>
     typeof window !== "undefined" ? window.innerWidth : 400
@@ -178,7 +207,7 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
     return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
-  const boardMetrics = getBoardMetrics(containerWidth, isMobile);
+  const boardMetrics = getBoardMetrics(containerWidth, isMobile, isTablet);
   const { tile, gap, padding } = boardMetrics;
   const { cells, ghost } = boardState;
 
