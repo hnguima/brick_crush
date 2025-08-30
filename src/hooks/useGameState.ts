@@ -20,14 +20,18 @@ export interface GameState {
 }
 
 export const useGameState = () => {
-  // Game engine instances
-  const gameEngineRef = useRef(new GameEngine());
-  const bagManagerRef = useRef(new BagManager());
+  // Game engine instances - use lazy initialization to prevent recreation
+  const gameEngineRef = useRef<GameEngine | null>(null);
+  const bagManagerRef = useRef<BagManager | null>(null);
   const lastGhostPositionRef = useRef<string | null>(null);
+  
+  // Initialize refs only once
+  gameEngineRef.current ??= new GameEngine();
+  bagManagerRef.current ??= new BagManager();
 
   // Game state
-  const [board, setBoard] = useState(() => gameEngineRef.current.getBoard());
-  const [bag, setBag] = useState(() => bagManagerRef.current.getBag());
+  const [board, setBoard] = useState(() => gameEngineRef.current!.getBoard());
+  const [bag, setBag] = useState(() => bagManagerRef.current!.getBag());
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
@@ -64,11 +68,11 @@ export const useGameState = () => {
 
   const handleNewGame = useCallback(() => {
     // Reset game engine and bag manager
-    gameEngineRef.current.reset();
+    gameEngineRef.current!.reset();
     bagManagerRef.current = new BagManager();
 
     // Reset all state
-    setBoard(gameEngineRef.current.getBoard());
+    setBoard(gameEngineRef.current!.getBoard());
     setBag(bagManagerRef.current.getBag());
     setDraggedPiece(null);
     setGhostPosition(null);
@@ -80,22 +84,22 @@ export const useGameState = () => {
   const placePiece = useCallback(
     (piece: Piece, boardX: number, boardY: number) => {
       // Use GameEngine's placePiece method to ensure internal state is updated
-      const placed = gameEngineRef.current.placePiece(piece, boardX, boardY);
+      const placed = gameEngineRef.current!.placePiece(piece, boardX, boardY);
 
       if (placed && draggedPiece) {
         // Play piece placement sound
         soundEngine.play(SoundEffect.PIECE_PLACE);
 
         // Remove piece from bag
-        bagManagerRef.current.removePiece(draggedPiece.index);
+        bagManagerRef.current!.removePiece(draggedPiece.index);
 
         // Update board state from GameEngine
-        setBoard(gameEngineRef.current.getBoard());
-        const newBag = bagManagerRef.current.getBag();
+        setBoard(gameEngineRef.current!.getBoard());
+        const newBag = bagManagerRef.current!.getBag();
         setBag(newBag);
 
         // Clear lines and update score
-        const clearResult = gameEngineRef.current.clearLines();
+        const clearResult = gameEngineRef.current!.clearLines();
         if (
           clearResult.clearedRows.length > 0 ||
           clearResult.clearedCols.length > 0
@@ -112,7 +116,7 @@ export const useGameState = () => {
             storage.setBestScore(newScore);
           }
 
-          setBoard(gameEngineRef.current.getBoard());
+          setBoard(gameEngineRef.current!.getBoard());
         }
 
         // Check if all pieces in bag are used (bag complete bonus)
@@ -122,7 +126,7 @@ export const useGameState = () => {
         }
 
         // Check for game over condition
-        const isGameOverNow = gameEngineRef.current.isGameOver(newBag);
+        const isGameOverNow = gameEngineRef.current!.isGameOver(newBag);
         if (isGameOverNow) {
           soundEngine.play(SoundEffect.GAME_OVER);
         }
@@ -162,7 +166,7 @@ export const useGameState = () => {
       const boardY = Math.min(...coords.map((c) => c.y));
 
       const lineCompletion = valid
-        ? gameEngineRef.current.checkPotentialLineCompletion(
+        ? gameEngineRef.current!.checkPotentialLineCompletion(
             piece,
             boardX,
             boardY
