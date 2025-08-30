@@ -188,7 +188,7 @@ const BIG_BLOCK_3X3: Piece = {
 
 // All available pieces
 export const PIECE_LIBRARY: Piece[] = [
-  // MONO,
+  MONO,
   DOMINO_H,
   DOMINO_V,
   TROMINO_I,
@@ -209,7 +209,7 @@ export const PIECE_LIBRARY: Piece[] = [
 // Piece weights for balanced gameplay
 // Smaller pieces are slightly more common
 export const PIECE_WEIGHTS: Record<string, number> = {
-  // MONO: 2.0,
+  MONO: 0.0,
   DOMINO_H: 1.8,
   DOMINO_V: 1.8,
   TROMINO_I: 1.5,
@@ -221,10 +221,10 @@ export const PIECE_WEIGHTS: Record<string, number> = {
   TETROMINO_J: 1.0,
   TETROMINO_S: 1.0,
   TETROMINO_Z: 1.0,
-  PENTOMINO_I: 0.6, // Rare, very large piece
+  PENTOMINO_I: 0.8, // Rare, very large piece
   HEXOMINO_3X2: 0.8, // Uncommon, medium-large
-  BIG_L_3X3: 0.6, // Very rare, very large
-  BIG_BLOCK_3X3: 0.6, // Extremely rare, massive
+  BIG_L_3X3: 0.8, // Very rare, very large
+  BIG_BLOCK_3X3: 0.8, // Extremely rare, massive
 };
 
 /**
