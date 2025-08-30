@@ -117,13 +117,11 @@ export class GameEngine {
     const clearedRows: number[] = [];
     const clearedCols: number[] = [];
 
+    // First, identify all complete rows and columns WITHOUT clearing them yet
     // Check rows
     for (let y = 0; y < 8; y++) {
       if (this.board[y].every((cell) => cell === 1)) {
         clearedRows.push(y);
-        for (let x = 0; x < 8; x++) {
-          this.board[y][x] = 0;
-        }
       }
     }
 
@@ -131,9 +129,20 @@ export class GameEngine {
     for (let x = 0; x < 8; x++) {
       if (this.board.every((row) => row[x] === 1)) {
         clearedCols.push(x);
-        for (let y = 0; y < 8; y++) {
-          this.board[y][x] = 0;
-        }
+      }
+    }
+
+    // Now clear all identified complete rows
+    for (const y of clearedRows) {
+      for (let x = 0; x < 8; x++) {
+        this.board[y][x] = 0;
+      }
+    }
+
+    // Now clear all identified complete columns
+    for (const x of clearedCols) {
+      for (let y = 0; y < 8; y++) {
+        this.board[y][x] = 0;
       }
     }
 
