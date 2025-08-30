@@ -59,7 +59,7 @@ function App() {
               width: "100%",
               maxWidth: {
                 xs: "500px", // Mobile - increased
-                sm: "600px", // Small tablets - increased  
+                sm: "600px", // Small tablets - increased
                 md: "800px", // Medium tablets - increased
                 lg: "950px", // Large screens - increased
                 xl: "1000px", // Extra large screens - increased

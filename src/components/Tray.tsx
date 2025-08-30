@@ -33,7 +33,7 @@ export const Tray: React.FC<TrayProps> = ({
   // Function to check if a piece can fit anywhere on the board
   const canPieceFitAnywhere = (piece: Piece): boolean => {
     if (!piece) return false;
-    
+
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         // Check if piece can be placed at this position
@@ -41,20 +41,26 @@ export const Tray: React.FC<TrayProps> = ({
         for (const cell of piece.cells) {
           const boardX = x + cell.x;
           const boardY = y + cell.y;
-          
+
           // Check bounds and if cell is occupied
-          if (boardX < 0 || boardX >= 8 || boardY < 0 || boardY >= 8 || board[boardY][boardX] !== 0) {
+          if (
+            boardX < 0 ||
+            boardX >= 8 ||
+            boardY < 0 ||
+            boardY >= 8 ||
+            board[boardY][boardX] !== 0
+          ) {
             canPlace = false;
             break;
           }
         }
-        
+
         if (canPlace) {
           return true;
         }
       }
     }
-    
+
     return false;
   };
 
@@ -118,7 +124,9 @@ export const Tray: React.FC<TrayProps> = ({
                   onDragStart={onPieceDragStart}
                   onDragEnd={onPieceDragEnd}
                   isValidPlacement={
-                    draggedPieceIndex === index ? ghostPosition?.valid : undefined
+                    draggedPieceIndex === index
+                      ? ghostPosition?.valid
+                      : undefined
                   }
                   canFitOnBoard={canPieceFitAnywhere(piece)}
                 />

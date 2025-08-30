@@ -3,10 +3,14 @@ import React from "react";
 import { Box, Paper, useTheme, useMediaQuery } from "@mui/material";
 
 // Responsive board metrics based on a base width (usually viewport width)
-const getBoardMetrics = (baseWidth: number, isMobile: boolean, isTablet: boolean) => {
+const getBoardMetrics = (
+  baseWidth: number,
+  isMobile: boolean,
+  isTablet: boolean
+) => {
   // Calculate tile size based on provided width (viewport or container)
   const width = Math.max(320, baseWidth || 400);
-  
+
   // More generous sizing for different screen sizes
   let maxBoardWidth;
   if (isMobile) {
@@ -41,13 +45,16 @@ const getBoardMetrics = (baseWidth: number, isMobile: boolean, isTablet: boolean
     maxTileSize = 65; // Increased from 60
   } else if (isTablet) {
     minTileSize = 45;
-    maxTileSize = 95; // Increased from 80 
+    maxTileSize = 95; // Increased from 80
   } else {
     minTileSize = 55;
     maxTileSize = 110; // Increased from 90
   }
-  
-  const tileSize = Math.max(minTileSize, Math.min(calculatedTileSize, maxTileSize));
+
+  const tileSize = Math.max(
+    minTileSize,
+    Math.min(calculatedTileSize, maxTileSize)
+  );
 
   // Ensure perfect square: calculate the actual board dimensions
   const actualBoardWidth = 8 * tileSize + 7 * gapSize + 2 * padding;
@@ -67,7 +74,10 @@ const getBoardMetrics = (baseWidth: number, isMobile: boolean, isTablet: boolean
 // Export function to get current board metrics from DOM
 export const getCurrentBoardMetrics = () => {
   const isMobile = typeof window !== "undefined" && window.innerWidth < 600; // Changed from 768 to 600
-  const isTablet = typeof window !== "undefined" && window.innerWidth >= 600 && window.innerWidth < 1200; // Changed from 768 to 600
+  const isTablet =
+    typeof window !== "undefined" &&
+    window.innerWidth >= 600 &&
+    window.innerWidth < 1200; // Changed from 768 to 600
   const width = typeof window !== "undefined" ? window.innerWidth : 400;
   // Prefer viewport width for consistency between UI and game logic
   const { tile, gap, padding } = getBoardMetrics(width, !!isMobile, !!isTablet);
