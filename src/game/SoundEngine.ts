@@ -97,18 +97,9 @@ export class SoundEngine {
       } else {
         this.assetPath = "/sounds/"; // Web public path
       }
-
-      console.log(
-        "🔊 Platform detected:",
-        this.isNativePlatform ? "Native" : "Web",
-        "- Asset path:",
-        this.assetPath
-      );
-    } catch (error) {
-      console.log("🔊 Platform detected: Web (fallback)");
+    } catch {
       this.isNativePlatform = false;
       this.assetPath = "/sounds/";
-      console.debug("Platform detection error:", error);
     }
   }
 
@@ -131,16 +122,8 @@ export class SoundEngine {
     }
 
     try {
-      console.log("🔊 Initializing sound engine...");
-
       // Detect platform first
       await this.detectPlatform();
-
-      console.log(
-        `🔊 Loading sounds for platform: ${
-          this.isNativePlatform ? "Native" : "Web"
-        }`
-      );
 
       // Preload all sound effects
       const loadPromises = Object.entries(this.soundConfigs).map(
@@ -154,8 +137,6 @@ export class SoundEngine {
                 paths.length > 1 ? `${soundId}_${index}` : soundId;
 
               try {
-                console.log(`Loading sound: ${assetId} from ${path}`);
-
                 await NativeAudio.preload({
                   assetId,
                   assetPath: path,
@@ -163,7 +144,6 @@ export class SoundEngine {
                   audioChannelNum: 1,
                   isUrl: !this.isNativePlatform, // Use URLs for web, bundled assets for native
                 });
-                console.log(`✅ Loaded sound: ${assetId}`);
               } catch (error) {
                 console.error(`❌ Failed to load sound ${assetId}:`, error);
               }
@@ -176,7 +156,6 @@ export class SoundEngine {
 
       await Promise.all(loadPromises);
       this.initialized = true;
-      console.log("🔊 Sound engine initialized successfully");
     } catch (error) {
       console.error("❌ Sound engine initialization failed:", error);
       // Disable sound engine if initialization fails
@@ -196,15 +175,7 @@ export class SoundEngine {
    * Play a sound effect (randomly selects from variations if multiple exist)
    */
   async play(effect: SoundEffect): Promise<void> {
-    console.log(`🔊 Attempting to play sound: ${effect}`);
-
-    if (!this.initialized) {
-      console.warn("🔊 Sound engine not initialized");
-      return;
-    }
-
-    if (!this.enabled) {
-      console.warn("🔊 Sound engine disabled");
+    if (!this.initialized || !this.enabled) {
       return;
     }
 
@@ -219,12 +190,10 @@ export class SoundEngine {
         assetId = `${effect}_${randomIndex}`;
       }
 
-      console.log(`🔊 Playing sound: ${assetId}`);
       await NativeAudio.play({
         assetId,
         time: 0,
       });
-      console.log(`✅ Successfully played sound: ${assetId}`);
     } catch (error) {
       console.warn(`⚠️ Failed to play sound ${effect}:`, error);
     }
@@ -343,7 +312,6 @@ export class SoundEngine {
 
     await Promise.all(unloadPromises);
     this.initialized = false;
-    console.log("🔇 Sound engine cleaned up");
   }
 
   /**
@@ -353,7 +321,6 @@ export class SoundEngine {
     effect: SoundEffect,
     times: number = 5
   ): Promise<void> {
-    console.log(`🔊 Testing ${times} variations of ${effect}`);
     for (let i = 0; i < times; i++) {
       await this.play(effect);
       // Wait a bit between plays
