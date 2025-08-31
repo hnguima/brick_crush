@@ -76,6 +76,7 @@ function App() {
             alignItems: "center",
             px: 1, // Reduced padding for mobile
             width: "100%",
+            position: "relative", // Needed for confetti positioning
           }}
         >
           <Box

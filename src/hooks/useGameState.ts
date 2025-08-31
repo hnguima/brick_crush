@@ -10,6 +10,7 @@ export interface AnimationState {
   clearingCols: number[];
   isAnimating: boolean;
   cellDelays?: Map<string, number>; // Map from "row-col" to delay in milliseconds
+  confettiCells: Set<string>; // Set of "row-col" strings for cells that should show confetti
 }
 
 export interface GameState {
@@ -61,6 +62,7 @@ export const useGameState = () => {
     clearingRows: [],
     clearingCols: [],
     isAnimating: false,
+    confettiCells: new Set<string>(),
   });
 
   // Load best score on component mount
@@ -108,6 +110,7 @@ export const useGameState = () => {
       clearingRows: [],
       clearingCols: [],
       isAnimating: false,
+      confettiCells: new Set<string>(),
     });
     lastGhostPositionRef.current = null;
   }, []);
@@ -182,16 +185,32 @@ export const useGameState = () => {
             clearResult.clearedCols
           );
 
+          // Build confetti cells set
+          const confettiCells = new Set<string>();
+          clearResult.clearedRows.forEach((row) => {
+            for (let col = 0; col < 8; col++) {
+              confettiCells.add(`${row}-${col}`);
+            }
+          });
+          clearResult.clearedCols.forEach((col) => {
+            for (let row = 0; row < 8; row++) {
+              confettiCells.add(`${row}-${col}`);
+            }
+          });
+
           // Start line clearing animation with sequential delays
           setAnimationState({
             clearingRows: clearResult.clearedRows,
             clearingCols: clearResult.clearedCols,
             isAnimating: true,
             cellDelays: cellDelays,
+            confettiCells: confettiCells,
           });
 
           // Play line clear sound for successful clears
           soundEngine.play(SoundEffect.LINE_CLEAR);
+
+          // Note: Confetti is now handled per-cell via the confettiCells in animationState
 
           // Calculate maximum animation duration (longest delay + animation duration)
           const maxDelay = Math.max(...Array.from(cellDelays.values()));
@@ -225,6 +244,7 @@ export const useGameState = () => {
               clearingCols: [],
               isAnimating: false,
               cellDelays: new Map(),
+              confettiCells: new Set<string>(),
             });
 
             // Check for game over condition AFTER line clearing is complete

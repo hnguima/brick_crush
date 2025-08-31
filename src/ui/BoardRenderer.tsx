@@ -99,6 +99,7 @@ export interface BoardState {
     clearingCols: number[];
     isAnimating: boolean;
     cellDelays?: Map<string, number>;
+    confettiCells?: Set<string>;
   };
 }
 
@@ -174,6 +175,13 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
     return animation.cellDelays.get(cellKey) || 0;
   };
 
+  const shouldShowConfetti = (row: number, col: number): boolean => {
+    if (!animation?.confettiCells) return false;
+
+    const cellKey = `${row}-${col}`;
+    return animation.confettiCells.has(cellKey);
+  };
+
   return (
     <Box
       ref={containerRef}
@@ -205,6 +213,7 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
               ghostValid={ghost?.valid}
               isCompletingLine={isCompletingLineCell(rowIndex, colIndex)}
               isClearing={isClearingCell(rowIndex, colIndex)}
+              shouldShowConfetti={shouldShowConfetti(rowIndex, colIndex)}
               animationDelay={getCellAnimationDelay(rowIndex, colIndex)}
               onClick={() => onCellClick?.(rowIndex, colIndex)}
               onHover={() => onCellHover?.(colIndex, rowIndex)}
@@ -235,6 +244,7 @@ export const useBoardState = (
     clearingCols: number[];
     isAnimating: boolean;
     cellDelays?: Map<string, number>;
+    confettiCells?: Set<string>;
   }
 ): [BoardState, React.Dispatch<React.SetStateAction<BoardState>>] => {
   const { cols, rows } = { cols: 8, rows: 8 }; // Fixed board dimensions

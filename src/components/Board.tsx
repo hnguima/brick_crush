@@ -33,6 +33,7 @@ export const Board: React.FC<BoardProps> = ({
   return (
     <Paper
       elevation={1}
+      data-testid="board-container"
       sx={{
         display: "inline-block", // Don't stretch to full width
         p: { xs: 1, sm: 1.5 }, // Responsive padding
