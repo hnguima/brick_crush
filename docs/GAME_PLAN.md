@@ -68,6 +68,7 @@ Success criteria
 
 ### Recently Completed ✅
 
+- ✅ Confetti effects system with tsparticles - Added celebratory confetti animations that trigger whenever lines are cleared, with enhanced effects for multi-line clears
 - ✅ Line/column clearing logic integration
 - ✅ Line completion ghost preview with highlighting
 - ✅ Functional New Game button
@@ -392,6 +393,7 @@ Accessibility
 - Missions: "Clear 3 columns in a row", "Place 5 L pieces".
 - Power‑ups: swap a piece, destroy a 3×3 area, rotate once per bag.
 - Combo meter visuals and fireworks for big clears.
+- ✅ Confetti celebration effects - Implemented with tsparticles library for line clear celebrations
 - Themes/skins: neon, pastel, retro; unlock via milestones.
 - Achievements and shareable end‑card image.
 - Local leaderboard; optional online leaderboard.
@@ -413,6 +415,7 @@ Accessibility
 
 Keep a concise log of plan-impacting changes. Newest first.
 
+- 2025-08-31: Enhanced confetti system with official bundle — replaced custom tsparticles configuration with official @tsparticles/confetti bundle for better visual effects and reliability. Confetti now uses realistic physics with proper shapes, colors, and multiple burst patterns for multi-line clears. Updated implementation to use the confetti() function directly instead of complex particle configurations. Files: `src/game/ConfettiEngine.ts`. Status: Confetti effects now working properly with attractive visual feedback for line clears.
 - 2025-08-30: Critical game over bug fix — fixed premature game over when line clearing would make space for remaining pieces. The bug occurred when: (1) only 2 pieces left in bag, (2) one piece appears opaque (can't fit current board), (3) placing the other piece clears lines making space for the opaque piece. Previously, game over check happened immediately before line clearing, causing false game over. Now game over check is deferred until after line clearing completes, ensuring pieces that become placeable after clearing are properly considered. Added comprehensive test scenario in `src/test/gameOverBugTest.ts` and manual testing helpers in `src/test/manualTestHelper.ts`. Enhanced useGameState hook with effect to re-evaluate game over condition whenever board/bag changes (not during animations). Files: `src/hooks/useGameState.ts`, `src/test/gameOverBugTest.ts`, `src/test/manualTestHelper.ts`, `src/App.tsx`. Status: Game over logic now correctly handles line clearing scenarios.
 - 2025-08-30: Sequential line clear animation implemented — added visually appealing wave-effect line clearing with sequential delays. Cells in clearing lines now animate from left-to-right (rows) or top-to-bottom (columns) with 50ms delays between each cell. Animation includes scale and fade effects with proper fill-mode to prevent visual glitches. Enhanced GameEngine with separated detection/clearing phases, updated animation state to include per-cell delays, and refined cell styling for transparent backgrounds with grey board container. Files: `src/game/GameEngine.ts`, `src/hooks/useGameState.ts`, `src/ui/BoardRenderer.tsx`, `src/components/BrickCell.tsx`. Status: Polished line clearing experience with smooth sequential animations.
 - 2025-08-30: Brick image system implemented — replaced generic colored cells with configurable brick images. Created BrickCell component supporting both image-based bricks (like brick_red.png) and fallback colored bricks. Updated board rendering to use reduced gaps (1px mobile, 2px tablet, 3px desktop) and removed borders for cleaner appearance. Updated draggable pieces to use same BrickCell component for visual consistency. Flexible brick type system allows easy addition of new brick colors/images. Files: `src/components/BrickCell.tsx`, `src/ui/BoardRenderer.tsx`, `src/components/DraggablePiece.tsx`. Status: Visual enhancement complete, game now uses brick images instead of generic colors.
