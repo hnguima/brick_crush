@@ -100,6 +100,7 @@ export interface BoardState {
     isAnimating: boolean;
     cellDelays?: Map<string, number>;
     confettiCells?: Set<string>;
+    shakeIntensity?: number;
   };
 }
 
@@ -245,6 +246,7 @@ export const useBoardState = (
     isAnimating: boolean;
     cellDelays?: Map<string, number>;
     confettiCells?: Set<string>;
+    shakeIntensity?: number;
   }
 ): [BoardState, React.Dispatch<React.SetStateAction<BoardState>>] => {
   const { cols, rows } = { cols: 8, rows: 8 }; // Fixed board dimensions

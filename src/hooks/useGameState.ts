@@ -11,6 +11,7 @@ export interface AnimationState {
   isAnimating: boolean;
   cellDelays?: Map<string, number>; // Map from "row-col" to delay in milliseconds
   confettiCells: Set<string>; // Set of "row-col" strings for cells that should show confetti
+  shakeIntensity: number; // 0 = no shake, 1 = light shake, 2 = medium shake, 3+ = intense shake
 }
 
 export interface GameState {
@@ -63,6 +64,7 @@ export const useGameState = () => {
     clearingCols: [],
     isAnimating: false,
     confettiCells: new Set<string>(),
+    shakeIntensity: 0,
   });
 
   // Load best score on component mount
@@ -111,6 +113,7 @@ export const useGameState = () => {
       clearingCols: [],
       isAnimating: false,
       confettiCells: new Set<string>(),
+      shakeIntensity: 0,
     });
     lastGhostPositionRef.current = null;
   }, []);
@@ -198,6 +201,10 @@ export const useGameState = () => {
             }
           });
 
+          // Calculate shake intensity based on number of lines cleared
+          const totalLinesCleared = clearResult.clearedRows.length + clearResult.clearedCols.length;
+          const shakeIntensity = Math.min(totalLinesCleared, 3); // Cap at intensity 3
+
           // Start line clearing animation with sequential delays
           setAnimationState({
             clearingRows: clearResult.clearedRows,
@@ -205,6 +212,7 @@ export const useGameState = () => {
             isAnimating: true,
             cellDelays: cellDelays,
             confettiCells: confettiCells,
+            shakeIntensity: shakeIntensity,
           });
 
           // Play line clear sound for successful clears
@@ -245,6 +253,7 @@ export const useGameState = () => {
               isAnimating: false,
               cellDelays: new Map(),
               confettiCells: new Set<string>(),
+              shakeIntensity: 0,
             });
 
             // Check for game over condition AFTER line clearing is complete
