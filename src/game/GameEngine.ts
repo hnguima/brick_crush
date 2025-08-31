@@ -250,7 +250,7 @@ export class GameEngine {
   }
 
   // Check if a piece can fit anywhere on the current board
-  private canPieceFitAnywhere(piece: Piece): boolean {
+  canPieceFitAnywhere(piece: Piece): boolean {
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         if (this.canPlacePiece(piece, x, y)) {
