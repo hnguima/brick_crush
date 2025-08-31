@@ -172,8 +172,8 @@ export const useGameState = () => {
         // Play piece placement sound
         soundEngine.play(SoundEffect.PIECE_PLACE);
 
-        // Remove piece from bag
-        bagManagerRef.current!.removePiece(draggedPiece.index);
+        // Remove piece from bag (pass current board for hail mary logic)
+        bagManagerRef.current!.removePiece(draggedPiece.index, gameEngineRef.current!.getBoard());
 
         // Update board state from GameEngine
         setBoard(gameEngineRef.current!.getBoard());
