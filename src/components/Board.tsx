@@ -32,9 +32,13 @@ export const Board: React.FC<BoardProps> = ({
 
   // Calculate shake animation based on intensity
   const shakeIntensity = animationState?.shakeIntensity || 0;
-  const shakeAnimation = shakeIntensity > 0 
-    ? `board-shake-${Math.min(shakeIntensity, 3)} 0.6s ease-out` 
-    : 'none';
+  const shakeAnimation =
+    shakeIntensity > 0
+      ? `board-shake-${Math.min(
+          shakeIntensity,
+          3
+        )} 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)`
+      : "none";
 
   return (
     <Paper
@@ -47,42 +51,34 @@ export const Board: React.FC<BoardProps> = ({
         bgcolor: "background.paper",
         // Add shake animation based on intensity
         animation: shakeAnimation,
-        // Define shake keyframes with increasing intensity
-        '@keyframes board-shake-1': {
-          '0%, 100%': { transform: 'translate(0, 0)' },
-          '10%': { transform: 'translate(-1px, -1px)' },
-          '20%': { transform: 'translate(1px, -1px)' },
-          '30%': { transform: 'translate(-1px, 1px)' },
-          '40%': { transform: 'translate(1px, 1px)' },
-          '50%': { transform: 'translate(-1px, -1px)' },
-          '60%': { transform: 'translate(1px, -1px)' },
-          '70%': { transform: 'translate(-1px, 1px)' },
-          '80%': { transform: 'translate(1px, 1px)' },
-          '90%': { transform: 'translate(-1px, -1px)' },
+        // Define KAPOW shake keyframes - differentiated intensities with maintained snappiness
+        "@keyframes board-shake-1": {
+          "0%": { transform: "translate(0, 0) scale(1)" },
+          "45%": { transform: "translate(-2px, 1px) scale(1.01)" }, // Gentle ascent
+          "55%": { transform: "translate(-2px, 2px) scale(1.02)" }, // Subtle peak
+          "70%": { transform: "translate(1px, -1px) scale(0.99)" }, // Minimal descent
+          "80%": { transform: "translate(-1px, 0px) scale(1.005)" }, // Tiny bounce
+          "90%": { transform: "translate(0, 0) scale(1)" }, // Quick snap back
+          "100%": { transform: "translate(0, 0) scale(1)" },
         },
-        '@keyframes board-shake-2': {
-          '0%, 100%': { transform: 'translate(0, 0)' },
-          '10%': { transform: 'translate(-2px, -2px)' },
-          '20%': { transform: 'translate(2px, -2px)' },
-          '30%': { transform: 'translate(-2px, 2px)' },
-          '40%': { transform: 'translate(2px, 2px)' },
-          '50%': { transform: 'translate(-2px, -2px)' },
-          '60%': { transform: 'translate(2px, -2px)' },
-          '70%': { transform: 'translate(-2px, 2px)' },
-          '80%': { transform: 'translate(2px, 2px)' },
-          '90%': { transform: 'translate(-2px, -2px)' },
+        "@keyframes board-shake-2": {
+          "0%": { transform: "translate(0, 0) scale(1)" },
+          "35%": { transform: "translate(-6px, 4px) scale(1.04)" }, // Medium ascent
+          "45%": { transform: "translate(-8px, 5px) scale(1.06)" }, // Peak
+          "60%": { transform: "translate(4px, -3px) scale(0.96)" }, // Quick descent
+          "70%": { transform: "translate(-2px, 2px) scale(1.03)" }, // Fast bounce
+          "80%": { transform: "translate(0, 0) scale(1)" }, // Snap to position
+          "100%": { transform: "translate(0, 0) scale(1)" },
         },
-        '@keyframes board-shake-3': {
-          '0%, 100%': { transform: 'translate(0, 0) rotate(0deg)' },
-          '10%': { transform: 'translate(-3px, -3px) rotate(-0.5deg)' },
-          '20%': { transform: 'translate(3px, -3px) rotate(0.5deg)' },
-          '30%': { transform: 'translate(-3px, 3px) rotate(-0.5deg)' },
-          '40%': { transform: 'translate(3px, 3px) rotate(0.5deg)' },
-          '50%': { transform: 'translate(-3px, -3px) rotate(-0.5deg)' },
-          '60%': { transform: 'translate(3px, -3px) rotate(0.5deg)' },
-          '70%': { transform: 'translate(-3px, 3px) rotate(-0.5deg)' },
-          '80%': { transform: 'translate(3px, 3px) rotate(0.5deg)' },
-          '90%': { transform: 'translate(-3px, -3px) rotate(-0.5deg)' },
+        "@keyframes board-shake-3": {
+          "0%": { transform: "translate(0, 0) scale(1)" },
+          "25%": { transform: "translate(-12px, 8px) scale(1.08)" }, // Explosive ascent
+          "35%": { transform: "translate(-16px, 12px) scale(1.12)" }, // Dramatic peak
+          "50%": { transform: "translate(10px, -8px) scale(0.92)" }, // Violent descent
+          "60%": { transform: "translate(-6px, 4px) scale(1.06)" }, // Strong bounce
+          "70%": { transform: "translate(2px, -2px) scale(0.98)" }, // Secondary bounce
+          "80%": { transform: "translate(0, 0) scale(1)" }, // Snap to position
+          "100%": { transform: "translate(0, 0) scale(1)" },
         },
       }}
     >

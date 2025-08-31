@@ -26,25 +26,25 @@ export const CellConfetti: React.FC<CellConfettiProps> = ({
           const viewportX = x / window.innerWidth;
           const viewportY = y / window.innerHeight;
 
-          // Configure confetti to appear at this cell's screen position
+          // Configure confetti to appear at this cell's screen position with reduced bounce
           await confetti({
-            particleCount: 10, // Small burst per cell
-            spread: 360, // Radial burst in all directions
-            scalar: 1, // Small particles
-            gravity: 0, // Light gravity so particles float a bit
-            startVelocity: 5, // Moderate initial velocity
-            ticks: 1000, // Higher value = faster fade out = shorter duration
+            particleCount: 20, // Reduced from 10 to 8 for less clutter
+            spread: 360, // Reduced from 360 to 200 for tighter spread
+            scalar: 0.8, // Smaller particles
+            gravity: 1, // Increased gravity for quicker settle
+            startVelocity: 10, // Reduced initial velocity for less bouncing
+            ticks: 1000, // Reduced for shorter duration
             origin: { x: viewportX, y: viewportY }, // Use calculated screen position
             colors: ["#FFD700", "#FFEA00", "#FFF700", "#FFFF00"], // Bright celebration colors
             disableForReducedMotion: false,
-            shapes: ["star"],
+            shapes: ["circle"], // Changed from "star" to "circle" for simpler animation
             flat: true,
           });
 
-          // Clean up after animation (shorter timeout since particles fade faster)
+          // Clean up after animation (shorter timeout for reduced animation)
           setTimeout(() => {
             onComplete?.();
-          }, 600); // Reduced from 1000ms to match faster fade
+          }, 500); // Reduced from 600ms to match faster animation
         } catch (error) {
           console.error("Cell confetti error:", error);
           onComplete?.();

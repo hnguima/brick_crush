@@ -98,101 +98,102 @@ export const BrickCell: React.FC<BrickCellProps> = ({
   return (
     <Box ref={cellRef} sx={{ position: "relative" }}>
       <Paper
-      elevation={0} // Remove elevation/shadow
-      onClick={onClick}
-      onMouseEnter={onHover}
-      onDrop={(e) => {
-        e.preventDefault();
-        onDrop?.();
-      }}
-      onDragOver={(e) => {
-        e.preventDefault(); // Allow drop
-      }}
-      data-cell={`${row}-${col}`}
-      sx={{
-        width: `${tileSize}px`,
-        height: `${tileSize}px`,
-        minWidth: `${tileSize}px`, // Force minimum dimensions
-        minHeight: `${tileSize}px`,
-        maxWidth: `${tileSize}px`, // Force maximum dimensions
-        maxHeight: `${tileSize}px`,
-        borderRadius: 0.5, // Completely square, no rounded corners
-        cursor: "default",
-        bgcolor: bgColor,
-        opacity: 1,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        boxSizing: "border-box", // Include border in dimensions
-        flexShrink: 0, // Prevent shrinking
-        flexGrow: 0, // Prevent growing
-        margin: 0, // No margin
-        padding: 0, // No internal padding
-        overflow: "hidden", // Ensure image doesn't overflow
-        border: `${borderWidth}px solid ${borderColor}`, // Dynamic border for line completion
-        outline: "none", // Remove focus outline
-        boxShadow: boxShadow, // Dynamic box shadow for line completion glow
-        // Clearing animation
-        ...(isClearing && {
-        animation: `line-clearing 0.6s ease-out ${animationDelay}ms forwards`,
-        "@keyframes line-clearing": {
-          "0%": {
-          transform: "scale(1)",
-          opacity: 1,
+        elevation={0} // Remove elevation/shadow
+        onClick={onClick}
+        onMouseEnter={onHover}
+        onDrop={(e) => {
+          e.preventDefault();
+          onDrop?.();
+        }}
+        onDragOver={(e) => {
+          e.preventDefault(); // Allow drop
+        }}
+        data-cell={`${row}-${col}`}
+        sx={{
+          width: `${tileSize}px`,
+          height: `${tileSize}px`,
+          minWidth: `${tileSize}px`, // Force minimum dimensions
+          minHeight: `${tileSize}px`,
+          maxWidth: `${tileSize}px`, // Force maximum dimensions
+          maxHeight: `${tileSize}px`,
+          borderRadius: 0.5, // Completely square, no rounded corners
+          cursor: "default",
           bgcolor: bgColor,
-          },
-          "50%": {
-          transform: "scale(1.1)",
-          opacity: 0.7,
-          bgcolor: "rgba(255, 255, 255, 0.9)",
-          },
-          "100%": {
-          transform: "scale(0)",
-          opacity: 0,
-          bgcolor: "transparent",
-          },
-        },
-        }),
-      }}
+          opacity: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          boxSizing: "border-box", // Include border in dimensions
+          flexShrink: 0, // Prevent shrinking
+          flexGrow: 0, // Prevent growing
+          margin: 0, // No margin
+          padding: 0, // No internal padding
+          overflow: "hidden", // Ensure image doesn't overflow
+          border: `${borderWidth}px solid ${borderColor}`, // Dynamic border for line completion
+          outline: "none", // Remove focus outline
+          boxShadow: boxShadow, // Dynamic box shadow for line completion glow
+          // Clearing animation with max 2 bounces
+          ...(isClearing && {
+            animation: `line-clearing 0.5s ease-out ${animationDelay}ms forwards`,
+            "@keyframes line-clearing": {
+              "0%": {
+                transform: "scale(1)",
+                opacity: 1,
+                bgcolor: bgColor,
+              },
+              "30%": {
+                transform: "scale(1.15)",
+                opacity: 0.8,
+                bgcolor: "rgba(255, 255, 255, 0.9)",
+              },
+              "65%": {
+                transform: "scale(0.8)",
+                opacity: 0.4,
+                bgcolor: "rgba(255, 255, 255, 0.5)",
+              },
+              "100%": {
+                transform: "scale(0)",
+                opacity: 0,
+                bgcolor: "transparent",
+              },
+            },
+          }),
+        }}
       >
-      {cell.occupied && (
-        <>
-        {cell.image ? (
-          // Use direct image for brick
-          <Box
-          component="img"
-          src={cell.image}
-          alt="Brick"
-          sx={{
-            width: "100%", // Increased from 90% to fill the cell completely
-            height: "100%", // Increased from 90% to fill the cell completely
-            objectFit: "cover",
-            borderRadius: 0, // Remove rounded corners to match cell style
-            imageRendering: "pixelated", // For crisp pixel art if needed
-          }}
-          />
-        ) : (
-          // Fallback to colored box (red brick default)
-          <Box
-          sx={{
-            width: "80%",
-            height: "80%",
-            borderRadius: 0.25, // Less rounded
-            bgcolor: "#B71C1C", // Red color as fallback
-            opacity: 0.8,
-          }}
-          />
+        {cell.occupied && (
+          <>
+            {cell.image ? (
+              // Use direct image for brick
+              <Box
+                component="img"
+                src={cell.image}
+                alt="Brick"
+                sx={{
+                  width: "100%", // Increased from 90% to fill the cell completely
+                  height: "100%", // Increased from 90% to fill the cell completely
+                  objectFit: "cover",
+                  borderRadius: 0, // Remove rounded corners to match cell style
+                  imageRendering: "pixelated", // For crisp pixel art if needed
+                }}
+              />
+            ) : (
+              // Fallback to colored box (red brick default)
+              <Box
+                sx={{
+                  width: "80%",
+                  height: "80%",
+                  borderRadius: 0.25, // Less rounded
+                  bgcolor: "#B71C1C", // Red color as fallback
+                  opacity: 0.8,
+                }}
+              />
+            )}
+          </>
         )}
-        </>
-      )}
       </Paper>
 
       {/* Confetti overlay for this specific cell */}
-      <CellConfetti 
-        shouldTrigger={confettiTriggered} 
-        x={x} 
-        y={y} 
-      />
+      <CellConfetti shouldTrigger={confettiTriggered} x={x} y={y} />
     </Box>
   );
 };
