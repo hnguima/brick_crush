@@ -20,6 +20,14 @@ if (import.meta.env.DEV) {
     (window as any).applyTestCaseToGame = module.applyTestCaseToGame;
     (window as any).allLineClearTestCases = module.allLineClearTestCases;
   });
+  import("./test/hailMaryTests").then((module) => {
+    (window as any).testHailMary = module.testHailMary;
+    (window as any).testBagGeneration = module.testBagGeneration;
+    (window as any).demonstrateHailMary = module.demonstrateHailMary;
+    (window as any).triggerHailMaryScenario = module.triggerHailMaryScenario;
+    (window as any).createNearlyFullBoard = module.createNearlyFullBoard;
+    (window as any).createMonoOnlyBoard = module.createMonoOnlyBoard;
+  });
 }
 
 function App() {
@@ -50,7 +58,6 @@ function App() {
       setBag: (gameLogic as any).setBag,
       setScore: (gameLogic as any).setScore,
       setIsGameOver: (gameLogic as any).setIsGameOver,
-      setAnimationState: (gameLogic as any).setAnimationState,
     };
     (window as any).currentAnimationState = animationState;
     (window as any).gameEngineRef = (gameLogic as any).gameEngineRef;
