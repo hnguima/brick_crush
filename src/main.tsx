@@ -5,6 +5,7 @@ import { Capacitor } from "@capacitor/core";
 import { soundEngine } from "./game/SoundEngine";
 import { settingsManager } from "./game/SettingsManager";
 import "./colors.css";
+import "./fonts.css"; // Import fonts
 import App from "./App.tsx";
 
 // Initialize safe area CSS variables for SSR compatibility

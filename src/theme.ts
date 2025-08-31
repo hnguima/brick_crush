@@ -53,7 +53,8 @@ export const getLightTheme = (): Theme =>
       borderRadius: 12,
     },
     typography: {
-      fontFamily: "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
+      fontFamily:
+        "'Bungee', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
       h1: {
         fontSize: "2rem",
         fontWeight: 700,
@@ -137,7 +138,8 @@ export const getDarkTheme = (): Theme =>
       borderRadius: 12,
     },
     typography: {
-      fontFamily: "Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
+      fontFamily:
+        "'Bungee', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif",
       h1: {
         fontSize: "2rem",
         fontWeight: 700,

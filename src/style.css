@@ -1,3 +1,6 @@
+/* Import custom fonts */
+@import "./fonts.css";
+
 :root {
   /* Material-inspired tokens; JS Theme.ts is the source of truth for rendering */
   --color-background: #f8f9fb;
@@ -26,9 +29,17 @@ body {
 }
 body {
   margin: 0;
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Bungee", Arial, sans-serif;
   color: var(--color-text);
   background: var(--color-background);
+}
+
+/* Force Bungee font on all Material-UI components */
+.MuiTypography-root,
+.MuiButton-root,
+.MuiAppBar-root,
+* {
+  font-family: "Bungee", Arial, sans-serif !important;
 }
 
 #app {
