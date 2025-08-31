@@ -88,6 +88,13 @@ export const BrickCell: React.FC<BrickCellProps> = ({
     };
   }, [shouldShowConfetti, animationDelay, confettiTriggered]);
 
+  // Reset confetti state when shouldShowConfetti becomes false
+  React.useEffect(() => {
+    if (!shouldShowConfetti) {
+      setConfettiTriggered(false);
+    }
+  }, [shouldShowConfetti]);
+
   return (
     <Box ref={cellRef} sx={{ position: "relative" }}>
       <Paper
@@ -181,7 +188,12 @@ export const BrickCell: React.FC<BrickCellProps> = ({
       </Paper>
 
       {/* Confetti overlay for this specific cell */}
-      <CellConfetti shouldTrigger={confettiTriggered} x={x} y={y} />
+      <CellConfetti 
+        shouldTrigger={confettiTriggered} 
+        x={x} 
+        y={y} 
+        onComplete={() => setConfettiTriggered(false)} 
+      />
     </Box>
   );
 };
