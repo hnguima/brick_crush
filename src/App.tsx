@@ -4,6 +4,7 @@ import { Board } from "./components/Board";
 import { Tray } from "./components/Tray";
 import { Hud } from "./components/Hud";
 import { GameOverDialog } from "./components/GameOverDialog";
+import { FloatingScore } from "./components/FloatingScore";
 import { useGameLogic } from "./hooks/useGameLogic";
 import "./colors.css";
 
@@ -12,6 +13,12 @@ if (import.meta.env.DEV) {
   import("./test/manualTestHelper");
   import("./test/gameOverBugTest").then((module) => {
     (window as any).testGameOverBug = module.testGameOverBugScenario;
+  });
+  import("./test/lineClearTestCases").then((module) => {
+    (window as any).runLineClearTest = module.runLineClearTest;
+    (window as any).runAllLineClearTests = module.runAllLineClearTests;
+    (window as any).applyTestCaseToGame = module.applyTestCaseToGame;
+    (window as any).allLineClearTestCases = module.allLineClearTestCases;
   });
 }
 
@@ -30,6 +37,7 @@ function App() {
     draggedPiece,
     animationState,
     handleNewGame,
+    handleFloatingScoreComplete,
     onPieceDragStart,
     onPieceDragEnd,
   } = gameLogic;
@@ -42,7 +50,9 @@ function App() {
       setBag: (gameLogic as any).setBag,
       setScore: (gameLogic as any).setScore,
       setIsGameOver: (gameLogic as any).setIsGameOver,
+      setAnimationState: (gameLogic as any).setAnimationState,
     };
+    (window as any).currentAnimationState = animationState;
     (window as any).gameEngineRef = (gameLogic as any).gameEngineRef;
     (window as any).bagManagerRef = (gameLogic as any).bagManagerRef;
   }
@@ -92,6 +102,7 @@ function App() {
               minWidth: "300px", // Min board width
               display: "flex",
               justifyContent: "center", // Center the board within the box
+              position: "relative", // Position relative for floating scores
             }}
           >
             <Board
@@ -99,6 +110,10 @@ function App() {
               imageBoard={imageBoard}
               ghostPosition={ghostPosition}
               animationState={animationState}
+            />
+            <FloatingScore
+              scores={animationState.floatingScores}
+              onScoreComplete={handleFloatingScoreComplete}
             />
           </Box>
         </Container>

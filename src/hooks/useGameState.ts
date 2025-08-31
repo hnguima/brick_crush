@@ -4,6 +4,8 @@ import { GameEngine } from "../game/GameEngine";
 import { BagManager } from "../game/BagManager";
 import { storage } from "../utils/storage";
 import { soundEngine, SoundEffect } from "../game/SoundEngine";
+import type { FloatingScoreItem } from "../components/FloatingScore";
+import { createFloatingScore } from "../components/FloatingScore";
 
 export interface AnimationState {
   clearingRows: number[];
@@ -12,6 +14,7 @@ export interface AnimationState {
   cellDelays?: Map<string, number>; // Map from "row-col" to delay in milliseconds
   confettiCells: Set<string>; // Set of "row-col" strings for cells that should show confetti
   shakeIntensity: number; // 0 = no shake, 1 = light shake, 2 = medium shake, 3+ = intense shake
+  floatingScores: FloatingScoreItem[]; // Active floating score animations
 }
 
 export interface GameState {
@@ -65,6 +68,7 @@ export const useGameState = () => {
     isAnimating: false,
     confettiCells: new Set<string>(),
     shakeIntensity: 0,
+    floatingScores: [],
   });
 
   // Load best score on component mount
@@ -114,6 +118,7 @@ export const useGameState = () => {
       isAnimating: false,
       confettiCells: new Set<string>(),
       shakeIntensity: 0,
+      floatingScores: [],
     });
     lastGhostPositionRef.current = null;
   }, []);
@@ -202,8 +207,12 @@ export const useGameState = () => {
           });
 
           // Calculate shake intensity based on number of lines cleared
-          const totalLinesCleared = clearResult.clearedRows.length + clearResult.clearedCols.length;
+          const totalLinesCleared =
+            clearResult.clearedRows.length + clearResult.clearedCols.length;
           const shakeIntensity = Math.min(totalLinesCleared, 3); // Cap at intensity 3
+
+          // Create floating score for line clears
+          const floatingScore = createFloatingScore(clearResult.score);
 
           // Start line clearing animation with sequential delays
           setAnimationState({
@@ -213,6 +222,7 @@ export const useGameState = () => {
             cellDelays: cellDelays,
             confettiCells: confettiCells,
             shakeIntensity: shakeIntensity,
+            floatingScores: [floatingScore],
           });
 
           // Play line clear sound for successful clears
@@ -254,6 +264,7 @@ export const useGameState = () => {
               cellDelays: new Map(),
               confettiCells: new Set<string>(),
               shakeIntensity: 0,
+              floatingScores: [], // Clear floating scores after animation
             });
 
             // Check for game over condition AFTER line clearing is complete
@@ -292,6 +303,13 @@ export const useGameState = () => {
     },
     [draggedPiece, score, bestScore, animationState.isAnimating]
   );
+
+  const handleFloatingScoreComplete = useCallback((scoreId: string) => {
+    setAnimationState((prev) => ({
+      ...prev,
+      floatingScores: prev.floatingScores.filter((s) => s.id !== scoreId),
+    }));
+  }, []);
 
   const updateGhostPosition = useCallback(
     (piece: Piece, targetCells: Array<{ row: number; col: number }>) => {
@@ -368,6 +386,7 @@ export const useGameState = () => {
     handleNewGame,
     placePiece,
     updateGhostPosition,
+    handleFloatingScoreComplete,
 
     // Internal refs and setters for testing (dev only)
     ...(import.meta.env.DEV && {
@@ -378,6 +397,7 @@ export const useGameState = () => {
       setBag,
       setScore,
       setIsGameOver,
+      setAnimationState,
     }),
   };
 };

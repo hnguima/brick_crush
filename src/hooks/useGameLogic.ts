@@ -21,6 +21,7 @@ export const useGameLogic = () => {
     handleNewGame,
     placePiece,
     updateGhostPosition,
+    handleFloatingScoreComplete,
   } = gameState;
 
   // Drag and drop handlers
@@ -99,6 +100,7 @@ export const useGameLogic = () => {
 
     // Game actions
     handleNewGame,
+    handleFloatingScoreComplete,
 
     // Drag and drop handlers
     ...dragDropHandlers,
