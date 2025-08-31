@@ -1,4 +1,4 @@
-import type { Piece, Bag } from "./Types";
+import type { Piece, Bag, Board } from "./Types";
 import { PIECE_LIBRARY, PIECE_WEIGHTS, randomlyRotatePiece } from "./PieceSet";
 import { SeededRandom } from "./Random";
 
@@ -6,8 +6,9 @@ import { SeededRandom } from "./Random";
  * Generate a new bag of 3 pieces with constraints
  * - Avoid all three being very large (4+ cells)
  * - Ensure variety (avoid duplicates when possible)
+ * - Apply hail mary mono piece if no pieces would fit on the board
  */
-export function generateBag(rng: SeededRandom): Bag {
+export function generateBag(rng: SeededRandom, board?: Board): Bag {
   const pieces: Piece[] = [];
   const usedIds = new Set<string>();
 
@@ -73,7 +74,15 @@ export function generateBag(rng: SeededRandom): Bag {
     pieces.push(clonePieceWithRandomRotation(piece, rng));
   }
 
-  return [pieces[0], pieces[1], pieces[2]];
+  const finalBag: Bag = [pieces[0], pieces[1], pieces[2]];
+
+  // Apply hail mary logic if board is provided and no pieces would fit
+  if (board && wouldCauseGameOver(finalBag, board)) {
+    console.log("🎯 HAIL MARY TRIGGERED! Applying MONO piece to prevent game over");
+    applyHailMaryMono(finalBag);
+  }
+
+  return finalBag;
 }
 
 /**
@@ -146,4 +155,84 @@ export function getBagSize(bag: Bag): number {
     (total, piece) => total + (piece ? piece.cells.length : 0),
     0
   );
+}
+
+/**
+ * Check if a bag would cause game over on the given board
+ */
+function wouldCauseGameOver(bag: Bag, board: Board): boolean {
+  // Simple check: try each piece at every board position
+  for (const piece of bag) {
+    if (!piece) continue;
+    
+    if (canPieceFitAnywhereOnBoard(piece, board)) {
+      return false; // At least one piece fits, not game over
+    }
+  }
+  
+  return true; // No pieces can fit anywhere
+}
+
+/**
+ * Check if a piece can fit anywhere on the board
+ */
+function canPieceFitAnywhereOnBoard(piece: Piece, board: Board): boolean {
+  for (let y = 0; y < 8; y++) {
+    for (let x = 0; x < 8; x++) {
+      if (canPlacePieceOnBoard(piece, x, y, board)) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Check if a piece can be placed at a specific position on the board
+ */
+function canPlacePieceOnBoard(piece: Piece, boardX: number, boardY: number, board: Board): boolean {
+  if (!piece?.cells) {
+    return false;
+  }
+
+  for (const cell of piece.cells) {
+    const x = boardX + cell.x;
+    const y = boardY + cell.y;
+
+    // Check bounds
+    if (x < 0 || x >= 8 || y < 0 || y >= 8) {
+      return false;
+    }
+
+    // Check if cell is already occupied
+    if (board[y][x] !== 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Apply hail mary logic: replace the largest piece with a MONO piece
+ */
+function applyHailMaryMono(bag: Bag): void {
+  // Find the piece with the most cells to replace
+  let largestIndex = 0;
+  let largestSize = 0;
+  
+  for (let i = 0; i < bag.length; i++) {
+    const piece = bag[i];
+    if (piece && piece.cells.length > largestSize) {
+      largestSize = piece.cells.length;
+      largestIndex = i;
+    }
+  }
+
+  // Get the MONO piece from the library
+  const monoPiece = PIECE_LIBRARY.find(piece => piece.id === "MONO");
+  if (monoPiece) {
+    // Replace the largest piece with a cloned MONO piece (no rotation needed for 1x1)
+    bag[largestIndex] = clonePiece(monoPiece);
+  }
 }

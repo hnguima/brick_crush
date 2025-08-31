@@ -1,4 +1,4 @@
-import type { Piece, Bag } from "./Types";
+import type { Piece, Bag, Board } from "./Types";
 import { generateBag } from "./Bag";
 import { SeededRandom } from "./Random";
 
@@ -19,7 +19,7 @@ export class BagManager {
     return this.bag.filter((piece) => piece !== null);
   }
 
-  removePiece(index: number): boolean {
+  removePiece(index: number, board?: Board): boolean {
     if (index < 0 || index >= 3 || this.bag[index] === null) {
       return false;
     }
@@ -28,7 +28,7 @@ export class BagManager {
 
     // Check if all pieces are used, generate new bag
     if (this.bag.every((piece) => piece === null)) {
-      this.bag = generateBag(this.rng);
+      this.bag = generateBag(this.rng, board);
     }
 
     return true;
@@ -38,10 +38,10 @@ export class BagManager {
     return this.bag.some((piece) => piece !== null);
   }
 
-  reset(seed?: string | number): void {
+  reset(seed?: string | number, board?: Board): void {
     if (seed !== undefined) {
       this.rng = new SeededRandom(seed);
     }
-    this.bag = generateBag(this.rng);
+    this.bag = generateBag(this.rng, board);
   }
 }
