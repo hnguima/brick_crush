@@ -25,4 +25,4 @@ dist-ssr
 
 
 .github
-.vscode
+.vscodetsconfig.tsbuildinfo
