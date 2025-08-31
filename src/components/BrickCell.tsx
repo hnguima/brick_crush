@@ -192,7 +192,6 @@ export const BrickCell: React.FC<BrickCellProps> = ({
         shouldTrigger={confettiTriggered} 
         x={x} 
         y={y} 
-        onComplete={() => setConfettiTriggered(false)} 
       />
     </Box>
   );
