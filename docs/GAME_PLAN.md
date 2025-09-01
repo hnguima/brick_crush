@@ -132,13 +132,24 @@ Placement rules
 - Drag a piece; ghost previews valid/invalid cells.
 - Drop only if every cell maps to empty board cells; otherwise snap back.
 
-Scoring (baseline)
+Scoring (enhanced system)
 
-- +1 point per tile placed.
-- +10 per line cleared (row or column).
-- Combo: +5 extra per additional line cleared in the same placement (e.g., double line = +15 each total).
-- Bag bonus: +15 when all 3 pieces in the current bag are placed.
-- Streak bonus (optional): successive placements that cause clears add +5 per streak level.
+- Progressive multi-line bonuses with exponential growth:
+
+  - 1 line: 50 points
+  - 2 lines: 50 + 100 = 150 points
+  - 3 lines: 50 + 100 + 200 = 350 points
+  - 4 lines: 50 + 100 + 200 + 400 = 750 points
+  - And so on (each additional line doubles the previous bonus)
+
+- Combo multiplier system:
+
+  - Each line clear round (1 to n lines) increments combo by 1
+  - Combo multiplier caps at 25x
+  - Combo resets to 1x if bag completes without any line clears
+  - Final score = base score × combo multiplier
+
+- Enhanced scoring state accessible for UI animations and display
 
 Game over
 
@@ -215,7 +226,7 @@ src/
   - PieceSet.ts — library of shapes
   - Bag.ts — 3‑piece bag generation with constraints
   - Fit.ts — fit checks, legal moves, game‑over check
-  - Scoring.ts — score calculation and combo logic
+  - Scoring.ts — ✅ score calculation and combo logic
   - Game.ts — orchestrates turns, placements, clearing, bag lifecycle
   - Random.ts — seeded RNG utilities
   - Storage.ts — load/save snapshot + best score
@@ -314,7 +325,7 @@ Core logic
 - [ ] Implement `Board.ts` with get/set and clone.
 - [ ] Implement `Fit.ts` (bounds + collision checks).
 - [ ] Implement `Bag.ts` with constraints.
-- [ ] Implement `Scoring.ts` (tile, clear, combo, bag bonuses).
+- [x] Implement `Scoring.ts` (tile, clear, combo, bag bonuses).
 - [ ] Implement `Game.ts` (state reducer style updates).
 - [ ] Implement `Storage.ts` (snapshot + best score).
 
@@ -415,6 +426,9 @@ Accessibility
 
 Keep a concise log of plan-impacting changes. Newest first.
 
+- 2025-08-31: Component architecture refactoring — extracted combo meter functionality into separate reusable ComboMeter component. Moved all combo styling constants (default, hot, fire, max combo variations) and animation logic from Hud.tsx into dedicated component. Enhanced modularity with clean props interface accepting combo, isMaxCombo values and custom sx styling. Fixed score display layout shifts by implementing responsive width sizing based on score ranges (35vw-90vw) instead of fit-content. Files: `src/components/ComboMeter.tsx`, `src/components/Hud.tsx`. Status: Cleaner component architecture with better separation of concerns and stable score display sizing.
+- 2025-08-31: AnimatedNumber component with counting animation — created reusable AnimatedNumber component with smooth counting animation for score display. Features configurable duration, easing (ease-out cubic), and accepts sx props for custom styling. Fixed intermittent animation issues by removing displayValue from useEffect dependencies and using previousValueRef for proper change detection. Integrated into HUD for animated score counting with 800ms duration. Files: `src/components/AnimatedNumber.tsx`, `src/components/Hud.tsx`. Status: Smooth animated number transitions enhancing visual feedback for score changes.
+- 2025-08-31: HUD layout restructure completed — finalized HUD design with clean two-row layout structure. Top row contains labels ("SCORE" left-aligned, "BEST [number]" right-aligned) in flexbox with space-between. Bottom row features large score number (16vw) on left with combo overlay positioned bottom-right of score box. Fixed file corruption issues from previous edits and recreated component with proper component structure. Layout now provides clear visual hierarchy with score prominence while keeping combo multiplier visible but not overwhelming. Files: `src/components/Hud.tsx`. Status: HUD layout complete, user approved design with separated score display elements.
 - 2025-08-31: Hail Mary MONO piece feature implemented — added quality of life improvement where if a newly generated bag would cause game over (no pieces can fit on the board), the system automatically replaces the largest piece in the bag with a MONO piece to give the player a chance to continue. This prevents frustrating deadlock scenarios where the player has no moves available through no fault of their own. Enhanced bag generation logic in `generateBag()` to accept optional board parameter and check for game over scenarios. Updated `BagManager` and `useGameState` to pass current board state during bag generation. Added comprehensive testing framework with `testBagGeneration()`, `triggerHailMaryScenario()`, and integration tests. Files: `src/game/Bag.ts`, `src/game/BagManager.ts`, `src/hooks/useGameState.ts`, `src/test/simpleBagTest.ts`, `src/test/hailMaryIntegrationTest2.ts`. Status: Quality of life improvement complete, players now get a fighting chance in deadlock scenarios.
 - 2025-08-31: Floating score testing functions added — created comprehensive browser testing functions for tinkering with floating score animations. Added `testFloatingScores()` to display all three score types simultaneously, individual testers (`testSingleScore()`, `testMultiScore()`, `testDramaticScore()`), and `clearFloatingScores()` for cleanup. Functions are exposed to `window` object in development mode for easy browser console access. Enhanced dev testing infrastructure by exposing `setAnimationState` and current animation state to support the floating score testing. Files: `src/components/FloatingScore.tsx`, `src/hooks/useGameState.ts`, `src/App.tsx`. Status: Comprehensive testing toolkit available for floating score animation development and refinement.
 - 2025-08-31: Floating score styling refactor — refactored floating score component to use defined sx objects for better maintainability. Created separate style objects for each score category: `singleLineScoreSx` (green, 1.4rem), `multiLineScoreSx` (orange, 1.8rem), and `dramaticScoreSx` (orange with glow, 1.8rem). Added helper function `getScoreSx()` to select appropriate styling based on score value. Eliminates inline conditional styling and makes it easier to modify visual effects for different score tiers. Files: `src/components/FloatingScore.tsx`. Status: Cleaner, more maintainable score styling system.
@@ -446,6 +460,8 @@ Keep a concise log of plan-impacting changes. Newest first.
 
 Keep a concise log of plan-impacting changes. Newest first.
 
+- 2025-08-31: HUD redesign with combo visualizer — redesigned HUD layout with big score box positioned on top of the board instead of header-style layout. Added combo multiplier overlay on bottom-right of score box with animated glow effects for max combo. Moved best score to fixed position bottom-right corner in smaller box. Removed New Game button as requested (game resets on game over). Enhanced combo system debugging and fixed bag completion detection logic to properly reset combo when bags complete without line clears. Files: `src/components/Hud.tsx`, `src/App.tsx`, `src/hooks/useGameState.ts`, `src/game/Scoring.ts`. Status: Polished UI with prominent score display and working combo mechanics.
+- 2025-08-31: Advanced scoring system implemented — created comprehensive scoring system with progressive multi-line bonuses (50, 100, 200, 400...) and combo multiplier (1x to 25x cap). Combo increments with each line clear round and resets if bag completes without clears. Final score = base score × combo multiplier. New ScoringEngine class provides state management and UI-accessible methods. Enhanced GameEngine integration with scoring state exposure. Files: `src/game/Scoring.ts`, `src/game/GameEngine.ts`, `src/hooks/useGameState.ts`, `src/game/Types.ts`. Status: Complete advanced scoring system with combo mechanics ready for UI integration.
 - 2025-08-29: Expanded piece library with larger pieces — added Pentomino I (5 cells), Hexomino 3x2 (6 cells), Big L 3x3 (5 cells), and Big Block 3x3 (9 cells). Updated bag generation constraints to prevent multiple huge pieces in same bag. Piece orientation is NOT randomized - pieces spawn in fixed orientations for consistent gameplay. Files: `src/game/PieceSet.ts`, `src/game/Bag.ts`. Status: More challenging gameplay with larger strategic pieces.
 - 2025-08-29: UI polish and bug fixes — fixed GameOverDialog HTML nesting error (h2 in h2), increased DraggablePiece hitboxes for better touch interaction, improved Board centering. Fixed TypeScript errors in Bag.ts for null piece handling. Files: `src/components/GameOverDialog.tsx`, `src/components/DraggablePiece.tsx`, `src/components/Board.tsx`, `src/game/Bag.ts`. Status: Better user experience with polished interactions.
 - 2025-08-29: Game over functionality completed — implemented complete game over detection when no pieces can fit on board, added GameOverDialog component with score display and new game option, integrated Capacitor Preferences for best score persistence. Fixed critical null pointer bug in game over detection by updating Bag type to allow null values and adding proper null checks in GameEngine. Files: `src/game/GameEngine.ts`, `src/game/Types.ts`, `src/components/GameOverDialog.tsx`, `src/hooks/useGameState.ts`, `src/hooks/useGameLogic.ts`, `src/App.tsx`, `src/utils/storage.ts`. Status: Core game loop complete with proper game over handling.
