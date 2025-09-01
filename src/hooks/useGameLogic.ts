@@ -16,6 +16,9 @@ export const useGameLogic = () => {
     ghostPosition,
     isGameOver,
     animationState,
+    combo,
+    isMaxCombo,
+    scoringState,
     setDraggedPiece,
     setGhostPosition,
     handleNewGame,
@@ -97,6 +100,11 @@ export const useGameLogic = () => {
     isGameOver,
     draggedPiece,
     animationState,
+
+    // Scoring information
+    combo,
+    isMaxCombo,
+    scoringState,
 
     // Game actions
     handleNewGame,
