@@ -1,49 +1,143 @@
 // HUD component: Score display and controls
 import React from "react";
-import { AppBar, Toolbar, Typography, Button, Box } from "@mui/material";
-import { soundEngine, SoundEffect } from "../game/SoundEngine";
+import { Box, Typography } from "@mui/material";
+import { AnimatedNumber } from "./AnimatedNumber";
+import { ComboMeter } from "./ComboMeter";
 
 interface HudProps {
   score?: number;
   bestScore?: number;
-  onNewGame?: () => void;
+  combo?: number;
+  isMaxCombo?: boolean;
 }
 
 export const Hud: React.FC<HudProps> = ({
   score = 0,
   bestScore = 0,
-  onNewGame,
+  combo = 1,
+  isMaxCombo = false,
 }) => {
   return (
-    <AppBar
-      position="static"
-      elevation={0}
+    <Box
       sx={{
-        bgcolor: "background.paper",
-        color: "text.primary",
-        pt: 1, // Add some top padding for better spacing with safe area
+        width: "100%",
+        mb: 3,
+        px: 2,
+        position: "relative",
       }}
     >
-      <Toolbar sx={{ justifyContent: "space-between" }}>
-        <Box sx={{ display: "flex", gap: 3 }}>
-          <Typography variant="body1">
-            Score: <strong>{score}</strong>
-          </Typography>
-          <Typography variant="body1">
-            Best: <strong>{bestScore}</strong>
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          color="primary"
-          onClick={() => {
-            soundEngine.play(SoundEffect.UI_BUTTON);
-            onNewGame?.();
+      {/* Labels Row - SCORE and BEST [number] */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%",
+          mb: 1,
+        }}
+      >
+        {/* SCORE label with combo meter */}
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            position: "relative",
           }}
         >
-          New Game
-        </Button>
-      </Toolbar>
-    </AppBar>
+          <Typography
+            variant="h2"
+            sx={{
+              color: "text.secondary",
+              margin: 0,
+              lineHeight: 1,
+              display: "flex",
+              alignItems: "flex-start",
+            }}
+          >
+            SCORE
+          </Typography>
+
+          {/* Combo meter container with fixed height to prevent layout shifts */}
+          <Box
+            sx={{
+              width: "40px", // Min width from ComboMeter base styles
+              height: "40px", // Fixed height to prevent layout shifts
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              position: "relative",
+            }}
+          >
+            <ComboMeter
+              combo={combo}
+              isMaxCombo={isMaxCombo}
+              sx={{
+                position: "relative",
+                bottom: "unset",
+                right: "unset",
+                alignSelf: "center",
+              }}
+            />
+          </Box>
+        </Box>
+
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1,
+            flexShrink: 0,
+          }}
+        >
+          <Typography
+            variant="caption"
+            sx={{
+              color: "text.secondary",
+              margin: 0,
+              alignItems: "baseline",
+            }}
+          >
+            BEST
+          </Typography>
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: "bold",
+              color: "secondary.main",
+              fontSize: "1.1rem",
+              margin: 0,
+              lineHeight: 1,
+              display: "flex",
+              alignItems: "flex-start",
+            }}
+          >
+            {bestScore.toLocaleString()}
+          </Typography>
+        </Box>
+      </Box>
+
+      {/* Score Number Row - Below the labels */}
+      <Box
+        sx={{
+          position: "relative",
+          minHeight: "16vw", // Prevent vertical layout shifts
+          display: "flex",
+          alignItems: "flex-start",
+        }}
+      >
+        <AnimatedNumber
+          value={score}
+          duration={800}
+          variant="h4"
+          sx={{
+            fontWeight: "bold",
+            fontSize: "16vw",
+            textAlign: "left",
+            color: "primary.main",
+          }}
+        />
+      </Box>
+    </Box>
   );
 };

@@ -8,6 +8,11 @@ import { FloatingScore } from "./components/FloatingScore";
 import { useGameLogic } from "./hooks/useGameLogic";
 import "./colors.css";
 
+// Load combo meter preview in development
+if (import.meta.env.DEV) {
+  import("./test/comboMeterPreview");
+}
+
 // Import test helpers for development (only in dev mode)
 if (import.meta.env.DEV) {
   import("./test/manualTestHelper");
@@ -44,6 +49,8 @@ function App() {
     isGameOver,
     draggedPiece,
     animationState,
+    combo,
+    isMaxCombo,
     handleNewGame,
     handleFloatingScoreComplete,
     onPieceDragStart,
@@ -80,10 +87,8 @@ function App() {
           paddingRight: "var(--safe-area-inset-right)",
         }}
       >
-        <Hud score={score} bestScore={bestScore} onNewGame={handleNewGame} />
-
         {/* Flexible spacer to center content vertically */}
-        <Box sx={{ flex: 1 }} />
+        <Box sx={{ flex: 0.5 }} />
 
         <Container
           maxWidth={false}
@@ -108,10 +113,19 @@ function App() {
               },
               minWidth: "300px", // Min board width
               display: "flex",
-              justifyContent: "center", // Center the board within the box
+              flexDirection: "column",
+              alignItems: "center",
               position: "relative", // Position relative for floating scores
             }}
           >
+            {/* Score HUD - Big box on top of board */}
+            <Hud
+              score={score}
+              bestScore={bestScore}
+              combo={combo}
+              isMaxCombo={isMaxCombo}
+            />
+
             <Board
               board={board}
               imageBoard={imageBoard}
