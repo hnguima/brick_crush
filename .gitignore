@@ -26,3 +26,4 @@ dist-ssr
 
 .github
 .vscodetsconfig.tsbuildinfo
+tsconfig.tsbuildinfo
