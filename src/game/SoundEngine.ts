@@ -7,6 +7,12 @@ export enum SoundEffect {
   PIECE_PLACE = "piece_place",
   PIECE_INVALID = "piece_invalid",
   LINE_CLEAR = "line_clear",
+  // Line count specific sounds for multi-line completions
+  LINE_CLEAR_DOUBLE = "line_clear_double", // 2 lines completed
+  LINE_CLEAR_TRIPLE = "line_clear_triple", // 3 lines completed
+  LINE_CLEAR_QUAD_PLUS = "line_clear_quad_plus", // 4+ lines completed
+  // Combo sounds (mapped to line_clear_1.wav through line_clear_16.wav)
+  LINE_CLEAR_COMBO = "line_clear_combo",
   BAG_COMPLETE = "bag_complete",
   GAME_OVER = "game_over",
   UI_BUTTON = "ui_button",
@@ -57,6 +63,45 @@ export class SoundEngine {
         "line_clear_4.m4a",
         "line_clear_5.m4a",
         "line_clear_6.m4a",
+      ],
+      volume: 0.8,
+      loop: false,
+    },
+    // Line count specific sounds for multi-line completions
+    [SoundEffect.LINE_CLEAR_DOUBLE]: {
+      paths: "line_clear_6.m4a", // Satisfying double-line completion
+      volume: 0.7,
+      loop: false,
+    },
+    [SoundEffect.LINE_CLEAR_TRIPLE]: {
+      paths: "line_clear_5.m4a", // Exciting triple-line completion
+      volume: 0.8,
+      loop: false,
+    },
+    [SoundEffect.LINE_CLEAR_QUAD_PLUS]: {
+      paths: "line_clear_4.m4a", // Epic 4+ line completion
+      volume: 0.9,
+      loop: false,
+    },
+    // Combo sounds (line_clear_1.wav to line_clear_16.wav for combo progression)
+    [SoundEffect.LINE_CLEAR_COMBO]: {
+      paths: [
+        "line_clear_1.wav", // Index 0: Combos 1-4
+        "line_clear_2.wav", // Index 1: Combo 5
+        "line_clear_3.wav", // Index 2: Combo 6
+        "line_clear_4.wav", // Index 3: Combo 7
+        "line_clear_5.wav", // Index 4: Combo 8
+        "line_clear_6.wav", // Index 5: Combo 9
+        "line_clear_7.wav", // Index 6: Combo 10
+        "line_clear_8.wav", // Index 7: Combo 11
+        "line_clear_9.wav", // Index 8: Combo 12
+        "line_clear_10.wav", // Index 9: Combo 13
+        "line_clear_11.wav", // Index 10: Combo 14
+        "line_clear_12.wav", // Index 11: Combo 15
+        "line_clear_13.wav", // Index 12: Combo 16
+        "line_clear_14.wav", // Index 13: Combo 17
+        "line_clear_15.wav", // Index 14: Combo 18
+        "line_clear_16.wav", // Index 15: Combo 19+ (also used for combo 20+)
       ],
       volume: 0.8,
       loop: false,
@@ -325,6 +370,72 @@ export class SoundEngine {
       await this.play(effect);
       // Wait a bit between plays
       await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+
+  /**
+   * Get appropriate line clear sound effect based on number of lines completed
+   */
+  getLineClearSoundByLineCount(linesCleared: number): SoundEffect | null {
+    if (linesCleared === 2) return SoundEffect.LINE_CLEAR_DOUBLE;
+    if (linesCleared === 3) return SoundEffect.LINE_CLEAR_TRIPLE;
+    if (linesCleared >= 4) return SoundEffect.LINE_CLEAR_QUAD_PLUS;
+    return null; // No special sound for single line clears
+  }
+
+  /**
+   * Play a combo-specific line clear sound based on combo level
+   * Combos 1-4: sound 1, Combos 5-19: sounds 2-16, Combo 20+: sound 16
+   */
+  async playComboSound(combo: number): Promise<void> {
+    if (!this.initialized || !this.enabled) {
+      return;
+    }
+
+    try {
+      const config = this.soundConfigs[SoundEffect.LINE_CLEAR_COMBO];
+      const paths = this.getFullPaths(config);
+
+      // Determine sound index based on combo level
+      let soundIndex: number;
+      if (combo <= 4) {
+        soundIndex = 0; // line_clear_1.wav for combos 1-4
+      } else if (combo <= 19) {
+        soundIndex = Math.min(combo - 4, paths.length - 1); // combos 5-19 map to indices 1-15
+      } else {
+        soundIndex = paths.length - 1; // Last sound for combo 20+
+      }
+
+      const assetId = `${SoundEffect.LINE_CLEAR_COMBO}_${soundIndex}`;
+
+      await NativeAudio.play({
+        assetId,
+        time: 0,
+      });
+    } catch (error) {
+      console.warn(`⚠️ Failed to play combo sound for combo ${combo}:`, error);
+    }
+  }
+
+  /**
+   * Determine which type of line clear sound to play based on context
+   * COMBO SOUND: Always plays on every line clear
+   * LINE COUNT SOUND: Additionally plays for 2, 3, or 4+ line completions
+   */
+  async playLineClearSound(options: {
+    linesCleared: number;
+    combo: number;
+    score: number;
+  }): Promise<void> {
+    const { linesCleared, combo } = options;
+
+    // ALWAYS play combo sound for any line clear
+    await this.playComboSound(combo);
+
+    // ADDITIONALLY play line count sound for multi-line clears (2, 3, 4+ lines)
+    const lineCountSound = this.getLineClearSoundByLineCount(linesCleared);
+    if (lineCountSound) {
+      await this.play(lineCountSound);
     }
   }
 }
