@@ -52,6 +52,7 @@ export const useGameState = () => {
   const [score, setScore] = useState(0);
   const [bestScore, setBestScore] = useState(0);
   const [isGameOver, setIsGameOver] = useState(false);
+  const [linesWereClearedThisBag, setLinesWereClearedThisBag] = useState(false); // Track if lines cleared in current bag
   const [draggedPiece, setDraggedPiece] = useState<{
     piece: Piece;
     index: number;
@@ -112,6 +113,7 @@ export const useGameState = () => {
     setGhostPosition(null);
     setScore(0);
     setIsGameOver(false);
+    setLinesWereClearedThisBag(false); // Reset bag tracking
     setAnimationState({
       clearingRows: [],
       clearingCols: [],
@@ -173,7 +175,13 @@ export const useGameState = () => {
         soundEngine.play(SoundEffect.PIECE_PLACE);
 
         // Remove piece from bag (pass current board for hail mary logic)
-        bagManagerRef.current!.removePiece(draggedPiece.index, gameEngineRef.current!.getBoard());
+        const oldBag = bagManagerRef.current!.getBag();
+        const oldBagPieceCount = oldBag.filter((p) => p !== null).length;
+
+        bagManagerRef.current!.removePiece(
+          draggedPiece.index,
+          gameEngineRef.current!.getBoard()
+        );
 
         // Update board state from GameEngine
         setBoard(gameEngineRef.current!.getBoard());
@@ -181,12 +189,21 @@ export const useGameState = () => {
         const newBag = bagManagerRef.current!.getBag();
         setBag(newBag);
 
+        const newBagPieceCount = newBag.filter((p) => p !== null).length;
+
+        // Detect if a new bag was generated (bag piece count reset to 3 from a lower number)
+        const bagWasCompleted =
+          oldBagPieceCount === 1 && newBagPieceCount === 3;
+
         // Check for lines to clear, but don't clear them yet
         const clearResult = gameEngineRef.current!.detectCompletedLines();
         if (
           clearResult.clearedRows.length > 0 ||
           clearResult.clearedCols.length > 0
         ) {
+          // Mark that lines were cleared in this bag
+          setLinesWereClearedThisBag(true);
+
           // Calculate sequential animation delays
           const cellDelays = calculateCellDelays(
             clearResult.clearedRows,
@@ -242,8 +259,8 @@ export const useGameState = () => {
               clearResult.clearedCols
             );
 
-            // Update score
-            const newScore = score + clearResult.score;
+            // Update score using GameEngine's total score
+            const newScore = gameEngineRef.current!.getTotalScore();
             setScore(newScore);
 
             // Update best score if needed
@@ -267,6 +284,19 @@ export const useGameState = () => {
               floatingScores: [], // Clear floating scores after animation
             });
 
+            // Handle bag completion AFTER line clearing is complete
+            if (bagWasCompleted) {
+              soundEngine.play(SoundEffect.BAG_COMPLETE);
+
+              // Lines were cleared, so don't reset combo (it was already incremented)
+              console.log(
+                `✅ Bag completed WITH line clears - keeping combo at ${gameEngineRef.current?.getCurrentCombo()}x`
+              );
+
+              // Reset bag tracking for next bag
+              setLinesWereClearedThisBag(false);
+            }
+
             // Check for game over condition AFTER line clearing is complete
             // This ensures pieces that become placeable after clearing are considered
             const isGameOverNow = gameEngineRef.current!.isGameOver(newBag);
@@ -275,12 +305,23 @@ export const useGameState = () => {
             }
             setIsGameOver(isGameOverNow);
           }, totalDuration); // Use calculated total duration
-        }
-
-        // Check if all pieces in bag are used (bag complete bonus)
-        const allPiecesUsed = newBag.every((piece) => piece === null);
-        if (allPiecesUsed) {
+        } else if (bagWasCompleted) {
+          // No lines were cleared - handle bag completion immediately
           soundEngine.play(SoundEffect.BAG_COMPLETE);
+
+          // If bag completed without any line clears, reset combo
+          if (!linesWereClearedThisBag) {
+            console.log(
+              `❌ Bag completed WITHOUT line clears - RESETTING COMBO from ${gameEngineRef.current?.getCurrentCombo()}x to 1x`
+            );
+            gameEngineRef.current!.processBagCompleteWithoutClears();
+            console.log(
+              `❌ Combo after reset: ${gameEngineRef.current?.getCurrentCombo()}x`
+            );
+          }
+
+          // Reset bag tracking for next bag
+          setLinesWereClearedThisBag(false);
         }
 
         // Only check for game over if no lines will be cleared
@@ -301,7 +342,13 @@ export const useGameState = () => {
 
       return false;
     },
-    [draggedPiece, score, bestScore, animationState.isAnimating]
+    [
+      draggedPiece,
+      score,
+      bestScore,
+      animationState.isAnimating,
+      linesWereClearedThisBag,
+    ]
   );
 
   const handleFloatingScoreComplete = useCallback((scoreId: string) => {
@@ -373,12 +420,18 @@ export const useGameState = () => {
     board,
     imageBoard,
     bag,
-    score,
+    score: gameEngineRef.current?.getTotalScore() || score,
     bestScore,
     draggedPiece,
     ghostPosition,
     isGameOver,
     animationState,
+
+    // Scoring information
+    combo: gameEngineRef.current?.getCurrentCombo() || 1,
+    comboDisplayText: gameEngineRef.current?.getComboDisplayText() || "",
+    isMaxCombo: gameEngineRef.current?.isMaxCombo() || false,
+    scoringState: gameEngineRef.current?.getScoringState(),
 
     // Actions
     setDraggedPiece,
