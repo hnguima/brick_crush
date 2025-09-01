@@ -16,6 +16,7 @@ interface BrickCellProps {
   isClearing?: boolean;
   shouldShowConfetti?: boolean; // New prop for confetti trigger
   animationDelay?: number; // Delay in milliseconds for sequential animation
+  linesCleared?: number; // Number of lines cleared to determine confetti intensity
   onClick?: () => void;
   onHover?: () => void;
   onDrop?: () => void;
@@ -32,6 +33,7 @@ export const BrickCell: React.FC<BrickCellProps> = ({
   isClearing,
   shouldShowConfetti,
   animationDelay = 0,
+  linesCleared = 1,
   onClick,
   onHover,
   onDrop,
@@ -193,7 +195,12 @@ export const BrickCell: React.FC<BrickCellProps> = ({
       </Paper>
 
       {/* Confetti overlay for this specific cell */}
-      <CellConfetti shouldTrigger={confettiTriggered} x={x} y={y} />
+      <CellConfetti
+        shouldTrigger={confettiTriggered}
+        x={x}
+        y={y}
+        linesCleared={linesCleared}
+      />
     </Box>
   );
 };
