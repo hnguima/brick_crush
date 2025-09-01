@@ -1,6 +1,7 @@
 // FloatingScore component: Shows animated score numbers floating up from board
 import React, { useState, useEffect } from "react";
 import { Box, Typography } from "@mui/material";
+import { getTextStyleByScore } from "../styles/textStyles";
 
 export interface FloatingScoreItem {
   id: string;
@@ -15,86 +16,19 @@ interface FloatingScoreProps {
   onScoreComplete?: (id: string) => void;
 }
 
-// Defined sx objects for each score category
-const baseScoreSx = {
-  fontFamily: "'Bungee', 'Arial Black', sans-serif", // Use Bungee font with fallbacks
-  fontWeight: "normal", // Bungee is already bold by design
-  textShadow: "2px 2px 4px rgba(0,0,0,0.5)", // Strong shadow for visibility
-};
-
-// Subtle score: <100 points - simple white/gray
-const subtleScoreSx = {
-  ...baseScoreSx,
-  color: "#e0e0e0",
-  WebkitTextStroke: "1px rgba(255,255,255,0.8)",
-  fontSize: "1.6rem",
-};
-
-// Basic score: 100-249 points - simple colored
-const basicScoreSx = {
-  ...baseScoreSx,
-  color: "#4fc3f7", // Light blue
-  WebkitTextStroke: "1px white",
-  fontSize: "2rem",
-};
-
-// Good score: 250-499 points - green gradient
-const goodScoreSx = {
-  ...baseScoreSx,
-  background:
-    "linear-gradient(90deg, #4caf50 0%, #81c784 25%, #a5d6a7 50%, #66bb6a 75%, #388e3c 100%)",
-  backgroundSize: "200% 100%",
-  backgroundClip: "text",
-  WebkitBackgroundClip: "text",
-  color: "transparent",
-  WebkitTextFillColor: "transparent",
-  WebkitTextStroke: "1px white",
-  textShadow: "0 0 12px #66bb6a",
-  fontSize: "2.4rem",
-};
-
-// Great score: 500-999 points - orange/red gradient with glow
-const greatScoreSx = {
-  ...baseScoreSx,
-  background:
-    "linear-gradient(90deg, #ff5722 0%, #ff7043 20%, #fff091ff 40%, #ff8a65 60%, #d84315 80%, #bf360c 100%)",
-  backgroundSize: "100% 100%",
-  backgroundClip: "text",
-  WebkitBackgroundClip: "text",
-  color: "transparent",
-  // WebkitTextFillColor: "transparent",
-  WebkitTextStroke: "1.5px white",
-  textShadow: "0 0 18px #ff7043",
-  fontSize: "2.8rem",
-};
-
-// Epic score: 1000+ points - rainbow gradient with strong glow
-const epicScoreSx = {
-  ...baseScoreSx,
-  background:
-    "linear-gradient(90deg, #ff1744, #ff9100, #fff700, #00e676, #00b0ff, #8c4dff, #f500a3, #ff1744)",
-  backgroundClip: "text",
-  backgroundSize: "200% 100%",
-  WebkitBackgroundClip: "text",
-  WebkitTextFillColor: "transparent",
-  color: "transparent",
-  WebkitTextStroke: "2px white",
-  textShadow: "0 0 30px #fff",
-  fontSize: "3.2rem",
-  animation: "rainbow-shift 1.2s linear infinite",
-  "@keyframes rainbow-shift": {
-    "0%": { backgroundPosition: "-100% 50%" },
-    "100%": { backgroundPosition: "100% 50%" },
-  },
-};
-
 // Helper function to get appropriate sx object and animation based on score
 const getScoreStyle = (points: number) => {
-  if (points >= 1000) return { sx: epicScoreSx, animation: "epic" };
-  if (points >= 500) return { sx: greatScoreSx, animation: "great" };
-  if (points >= 250) return { sx: goodScoreSx, animation: "good" };
-  if (points >= 100) return { sx: basicScoreSx, animation: "basic" };
-  return { sx: subtleScoreSx, animation: "subtle" };
+  const baseStyle = getTextStyleByScore(points);
+
+  if (points >= 1000)
+    return { sx: { ...baseStyle, fontSize: "3.2rem" }, animation: "epic" };
+  if (points >= 500)
+    return { sx: { ...baseStyle, fontSize: "2.8rem" }, animation: "great" };
+  if (points >= 250)
+    return { sx: { ...baseStyle, fontSize: "2.4rem" }, animation: "good" };
+  if (points >= 100)
+    return { sx: { ...baseStyle, fontSize: "2rem" }, animation: "basic" };
+  return { sx: { ...baseStyle, fontSize: "1.6rem" }, animation: "subtle" };
 };
 
 // Animation variants for different score categories

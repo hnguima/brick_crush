@@ -3,6 +3,7 @@ import React from "react";
 import { Box, Typography } from "@mui/material";
 import { AnimatedNumber } from "./AnimatedNumber";
 import { ComboMeter } from "./ComboMeter";
+import { getTextStyleByCombo } from "../styles/textStyles";
 
 interface HudProps {
   score?: number;
@@ -48,7 +49,7 @@ export const Hud: React.FC<HudProps> = ({
           <Typography
             variant="h2"
             sx={{
-              color: "text.secondary",
+              color: "#aaecffff",
               margin: 0,
               lineHeight: 1,
               display: "flex",
@@ -93,7 +94,7 @@ export const Hud: React.FC<HudProps> = ({
           <Typography
             variant="caption"
             sx={{
-              color: "text.secondary",
+              color: "#aaecffff",
               margin: 0,
               alignItems: "baseline",
             }}
@@ -129,12 +130,10 @@ export const Hud: React.FC<HudProps> = ({
         <AnimatedNumber
           value={score}
           duration={800}
-          variant="h4"
           sx={{
-            fontWeight: "bold",
+            ...getTextStyleByCombo(combo),
             fontSize: "16vw",
             textAlign: "left",
-            color: "primary.main",
           }}
         />
       </Box>
