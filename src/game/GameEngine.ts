@@ -1,13 +1,16 @@
 import type { Piece, Board, Coord } from "./Types";
 import { getCurrentBoardMetrics } from "../ui/BoardRenderer";
+import { ScoringEngine } from "./Scoring";
 
 export class GameEngine {
   public board: Board;
   private imageBoard: (string | null)[][]; // Track image paths for each cell
+  private readonly scoringEngine: ScoringEngine;
 
   constructor() {
     this.board = this.createEmptyBoard();
     this.imageBoard = this.createEmptyImageBoard();
+    this.scoringEngine = new ScoringEngine();
   }
 
   private createEmptyBoard(): Board {
@@ -127,6 +130,9 @@ export class GameEngine {
     clearedRows: number[];
     clearedCols: number[];
     score: number;
+    baseScore: number;
+    comboMultiplier: number;
+    isNewCombo: boolean;
   } {
     const clearedRows: number[] = [];
     const clearedCols: number[] = [];
@@ -145,11 +151,20 @@ export class GameEngine {
       }
     }
 
-    // Calculate score
-    const linesCleared = clearedRows.length + clearedCols.length;
-    const score = linesCleared * 100;
+    // Process scoring through the scoring engine
+    const scoringResult = this.scoringEngine.processLineClear(
+      clearedRows,
+      clearedCols
+    );
 
-    return { clearedRows, clearedCols, score };
+    return {
+      clearedRows,
+      clearedCols,
+      score: scoringResult.finalScore,
+      baseScore: scoringResult.baseScore,
+      comboMultiplier: scoringResult.comboMultiplier,
+      isNewCombo: scoringResult.isNewCombo,
+    };
   }
 
   // Actually clear the specified lines (called after animation)
@@ -176,6 +191,9 @@ export class GameEngine {
     clearedRows: number[];
     clearedCols: number[];
     score: number;
+    baseScore: number;
+    comboMultiplier: number;
+    isNewCombo: boolean;
   } {
     const result = this.detectCompletedLines();
     this.clearSpecificLines(result.clearedRows, result.clearedCols);
@@ -226,6 +244,42 @@ export class GameEngine {
   reset(): void {
     this.board = this.createEmptyBoard();
     this.imageBoard = this.createEmptyImageBoard();
+    this.scoringEngine.reset();
+  }
+
+  // Scoring system accessors
+  getTotalScore(): number {
+    return this.scoringEngine.getTotalScore();
+  }
+
+  getCurrentCombo(): number {
+    return this.scoringEngine.getCurrentCombo();
+  }
+
+  getComboDisplayText(): string {
+    return this.scoringEngine.getComboDisplayText();
+  }
+
+  isMaxCombo(): boolean {
+    return this.scoringEngine.isMaxCombo();
+  }
+
+  getScoringState() {
+    return this.scoringEngine.getState();
+  }
+
+  // Called when a bag is completed without any line clears
+  processBagCompleteWithoutClears(): void {
+    this.scoringEngine.processBagCompleteWithoutClears();
+  }
+
+  // Get potential score for ghost preview
+  calculatePotentialScore(linesCleared: number): {
+    baseScore: number;
+    finalScore: number;
+    comboAfter: number;
+  } {
+    return this.scoringEngine.calculatePotentialScore(linesCleared);
   }
 
   // Check if any piece from the bag can fit anywhere on the board

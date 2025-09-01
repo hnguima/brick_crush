@@ -37,6 +37,23 @@ export interface ScoreState {
   combo: number;
 }
 
+// Enhanced scoring interfaces for the new scoring system
+export interface ScoringState {
+  combo: number; // Current combo multiplier (1x to 25x)
+  baseScore: number; // Score before combo multiplier
+  totalScore: number; // Final score after combo multiplier
+  lastClearScore: number; // Points from the most recent line clear (for animations)
+  totalLinesCleared: number; // Lifetime line clear count
+}
+
+export interface LineClearResult {
+  baseScore: number; // Raw score before combo
+  finalScore: number; // Score after combo multiplier applied
+  comboMultiplier: number; // The multiplier used (1x to 25x)
+  linesCleared: number; // Number of lines cleared this round
+  isNewCombo: boolean; // True if combo increased this round
+}
+
 export interface GameSettings {
   soundEnabled: boolean;
   reducedMotion: boolean;
