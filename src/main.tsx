@@ -8,6 +8,11 @@ import "./colors.css";
 import "./fonts.css"; // Import fonts
 import App from "./App.tsx";
 
+// Import test utilities in development mode
+if (import.meta.env.DEV) {
+  import("./test/FloatingScoreTest");
+}
+
 // Initialize safe area CSS variables for SSR compatibility
 initialize();
 
