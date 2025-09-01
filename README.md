@@ -205,17 +205,12 @@ npm run build:android # Android APK build
 npm run lint         # Code quality checking
 ```
 
-## 📄 License
-
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
-
 ## 🎮 Play Now
 
-- **Web Version**: [Play Brick Crush](https://your-deployment-url.com)
+- **Web Version**: [Play Brick Crush](https://brickcrush.the-cube-lab.com)
 - **Android**: Download from releases or build locally
 
 ---
 
 **Developed with ❤️ using React, TypeScript, and Capacitor**
 
-*Enjoy the satisfying puzzle experience of Brick Crush!*
