@@ -15,6 +15,7 @@ export interface AnimationState {
   confettiCells: Set<string>; // Set of "row-col" strings for cells that should show confetti
   shakeIntensity: number; // 0 = no shake, 1 = light shake, 2 = medium shake, 3+ = intense shake
   floatingScores: FloatingScoreItem[]; // Active floating score animations
+  linesCleared?: number; // Number of lines cleared to determine confetti intensity
 }
 
 export interface GameState {
@@ -70,6 +71,7 @@ export const useGameState = () => {
     confettiCells: new Set<string>(),
     shakeIntensity: 0,
     floatingScores: [],
+    linesCleared: 0,
   });
 
   // Load best score on component mount
@@ -121,6 +123,7 @@ export const useGameState = () => {
       confettiCells: new Set<string>(),
       shakeIntensity: 0,
       floatingScores: [],
+      linesCleared: 0,
     });
     lastGhostPositionRef.current = null;
   }, []);
@@ -240,6 +243,7 @@ export const useGameState = () => {
             confettiCells: confettiCells,
             shakeIntensity: shakeIntensity,
             floatingScores: [floatingScore],
+            linesCleared: totalLinesCleared,
           });
 
           // Play appropriate line clear sound based on number of lines cleared and combo
@@ -288,6 +292,7 @@ export const useGameState = () => {
               confettiCells: new Set<string>(),
               shakeIntensity: 0,
               floatingScores: [], // Clear floating scores after animation
+              linesCleared: 0,
             });
 
             // Handle bag completion AFTER line clearing is complete

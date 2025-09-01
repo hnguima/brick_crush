@@ -95,10 +95,12 @@ export const Tray: React.FC<TrayProps> = ({
       <Paper
         elevation={1}
         sx={{
-          width: `calc(${boardWidth}px + 25px)`,
+          width: `calc(${boardWidth}px - 25px)`,
           height: `${trayMetrics.height}px`,
           position: "relative", // For absolute positioning of pieces
-          borderRadius: 2,
+          borderRadius: 0.5,
+          bgcolor: "rgba(0, 0, 0, 0.4)",
+          zIndex: 100,
         }}
       >
         {/* Render pieces in fixed positions */}

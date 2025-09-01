@@ -48,7 +48,10 @@ export const Board: React.FC<BoardProps> = ({
         display: "inline-block", // Don't stretch to full width
         p: { xs: 1, sm: 1.5 }, // Responsive padding
         borderRadius: 2,
-        bgcolor: "background.paper",
+        bgcolor: "transparent",
+        boxShadow: "none",
+        border: "none",
+        zIndex: 100, 
         // Add shake animation based on intensity
         animation: shakeAnimation,
         // Define KAPOW shake keyframes - differentiated intensities with maintained snappiness

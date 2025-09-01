@@ -5,6 +5,7 @@ import { Tray } from "./components/Tray";
 import { Hud } from "./components/Hud";
 import { GameOverDialog } from "./components/GameOverDialog";
 import { FloatingScore } from "./components/FloatingScore";
+import { ParticleBackground } from "./components/ParticleBackground";
 import { useGameLogic } from "./hooks/useGameLogic";
 import "./colors.css";
 
@@ -33,6 +34,8 @@ if (import.meta.env.DEV) {
     (window as any).createNearlyFullBoard = module.createNearlyFullBoard;
     (window as any).createMonoOnlyBoard = module.createMonoOnlyBoard;
   });
+  // Import dialog test utilities
+  import("./test/dialogTest");
 }
 
 function App() {
@@ -64,22 +67,35 @@ function App() {
       setImageBoard: (gameLogic as any).setImageBoard,
       setBag: (gameLogic as any).setBag,
       setScore: (gameLogic as any).setScore,
+      setBestScore: (gameLogic as any).setBestScore,
       setIsGameOver: (gameLogic as any).setIsGameOver,
     };
     (window as any).currentAnimationState = animationState;
     (window as any).gameEngineRef = (gameLogic as any).gameEngineRef;
     (window as any).bagManagerRef = (gameLogic as any).bagManagerRef;
+
+    // Register dialog test helpers
+    import("./test/dialogTest").then((module) => {
+      module.registerTestDialogHelpers({
+        setIsGameOver: (gameLogic as any).setIsGameOver,
+        setScore: (gameLogic as any).setScore,
+        setBestScore: (gameLogic as any).setBestScore,
+      });
+    });
   }
 
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      <ParticleBackground />
       <Box
         sx={{
           display: "flex",
           flexDirection: "column",
           minHeight: "100vh",
-          bgcolor: "background.default",
+          background:
+            "radial-gradient(circle, #0d35b6ff 0%, #1b2445 70%, #10152b 100%)",
+          bgcolor: "#1b2445f",
           // Safe area support using capacitor-community/safe-area CSS variables
           paddingTop: "var(--safe-area-inset-top)",
           paddingBottom: "var(--safe-area-inset-bottom)",
@@ -87,6 +103,9 @@ function App() {
           paddingRight: "var(--safe-area-inset-right)",
         }}
       >
+        {/* Particle Background - positioned below the board but above the background */}
+        <ParticleBackground />
+
         {/* Flexible spacer to center content vertically */}
         <Box sx={{ flex: 0.5 }} />
 

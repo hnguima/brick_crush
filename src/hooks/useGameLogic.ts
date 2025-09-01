@@ -121,6 +121,7 @@ export const useGameLogic = () => {
       setImageBoard: (gameState as any).setImageBoard,
       setBag: (gameState as any).setBag,
       setScore: (gameState as any).setScore,
+      setBestScore: (gameState as any).setBestScore,
       setIsGameOver: (gameState as any).setIsGameOver,
     }),
   };

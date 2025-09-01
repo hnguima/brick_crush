@@ -101,6 +101,7 @@ export interface BoardState {
     cellDelays?: Map<string, number>;
     confettiCells?: Set<string>;
     shakeIntensity?: number;
+    linesCleared?: number;
   };
 }
 
@@ -201,7 +202,7 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
           gap: `${gap}px`,
           padding: 0,
           boxSizing: "border-box",
-          backgroundColor: "rgba(201, 197, 197, 0.2)", // Light grey tint for the board
+          backgroundColor: "rgba(0, 0, 0, 0.5)", // Light grey tint for the board
           borderRadius: 0.5, // Slightly rounded corners
         }}
       >
@@ -216,6 +217,7 @@ export const BoardRenderer: React.FC<BoardRendererProps> = ({
               isClearing={isClearingCell(rowIndex, colIndex)}
               shouldShowConfetti={shouldShowConfetti(rowIndex, colIndex)}
               animationDelay={getCellAnimationDelay(rowIndex, colIndex)}
+              linesCleared={boardState.animation?.linesCleared}
               onClick={() => onCellClick?.(rowIndex, colIndex)}
               onHover={() => onCellHover?.(colIndex, rowIndex)}
               onDrop={() => onCellDrop?.(colIndex, rowIndex)}
