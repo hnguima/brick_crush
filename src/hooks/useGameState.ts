@@ -242,8 +242,14 @@ export const useGameState = () => {
             floatingScores: [floatingScore],
           });
 
-          // Play line clear sound for successful clears
-          soundEngine.play(SoundEffect.LINE_CLEAR);
+          // Play appropriate line clear sound based on number of lines cleared and combo
+          const currentCombo = gameEngineRef.current!.getCurrentCombo();
+
+          soundEngine.playLineClearSound({
+            linesCleared: totalLinesCleared,
+            combo: currentCombo,
+            score: clearResult.score,
+          });
 
           // Note: Confetti is now handled per-cell via the confettiCells in animationState
 
