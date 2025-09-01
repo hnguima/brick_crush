@@ -61,7 +61,7 @@ if (typeof window !== "undefined" && import.meta.env.DEV) {
       justify-content: space-around;
       font-family: 'Bungee', Arial, sans-serif;
     `;
-    
+
     // Add sample score elements
     const scores = [
       { points: 50, label: "Subtle", color: "#e0e0e0" },
@@ -77,14 +77,14 @@ if (typeof window !== "undefined" && import.meta.env.DEV) {
         text-align: center;
         animation: bounce 2s ease-in-out infinite;
       `;
-      
+
       // Determine font size based on score category
       let fontSize = "1rem";
       if (score.points >= 1000) fontSize = "2rem";
       else if (score.points >= 500) fontSize = "1.8rem";
       else if (score.points >= 250) fontSize = "1.5rem";
       else if (score.points >= 100) fontSize = "1.3rem";
-      
+
       const pointsSpan = document.createElement("span");
       pointsSpan.textContent = `+${score.points}`;
       pointsSpan.style.cssText = `
@@ -94,7 +94,7 @@ if (typeof window !== "undefined" && import.meta.env.DEV) {
         text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
         margin-bottom: 4px;
       `;
-      
+
       const labelSpan = document.createElement("span");
       labelSpan.textContent = score.label;
       labelSpan.style.cssText = `
@@ -102,7 +102,7 @@ if (typeof window !== "undefined" && import.meta.env.DEV) {
         font-size: 0.8rem;
         color: #ccc;
       `;
-      
+
       scoreDiv.appendChild(pointsSpan);
       scoreDiv.appendChild(labelSpan);
       container.appendChild(scoreDiv);
@@ -117,7 +117,7 @@ if (typeof window !== "undefined" && import.meta.env.DEV) {
       }
     `;
     document.head.appendChild(style);
-    
+
     document.body.appendChild(container);
 
     console.log("Static floating scores displayed! Click anywhere to remove.");
@@ -142,7 +142,7 @@ if (typeof window !== "undefined" && import.meta.env.DEV) {
     console.log("Available test functions:");
     console.log("- showStaticFloatingScores(): Display static test scores");
     console.log("- testAllScoreTypes(): Get test score data array");
-    
+
     return {
       showStaticFloatingScores: (window as any).showStaticFloatingScores,
       testScores: testAllScoreTypes(),
@@ -151,7 +151,9 @@ if (typeof window !== "undefined" && import.meta.env.DEV) {
   };
 
   // Auto-expose on load
-  console.log("FloatingScore test utilities loaded. Run testFloatingScores() for help.");
+  console.log(
+    "FloatingScore test utilities loaded. Run testFloatingScores() for help."
+  );
 }
 
 // Export the testing function for use in other files
