@@ -80,8 +80,6 @@ npm run build:android
 |-------------|-------------|------------------|
 | Single Line Clear | 100 | 1x - 25x |
 | Multi-Line Clear | 100 × lines² | 1x - 25x |
-| Bag Completion | 50 | Applied |
-| Perfect Placement | Bonus | Applied |
 
 ## 🛠️ Technical Architecture
 
